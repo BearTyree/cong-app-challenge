@@ -3,33 +3,15 @@ import { authenticated } from "@/controllers/auth";
 import Link from "next/link";
 import {
   NavigationMenu,
-  NavigationMenuContent,
-  NavigationMenuIndicator,
   NavigationMenuItem,
   NavigationMenuLink,
   NavigationMenuList,
-  NavigationMenuTrigger,
-  NavigationMenuViewport,
 } from "@/components/ui/navigation-menu";
 
-// export default async function Header({ req }: { req: Request }) {
-//   if (await authenticated(req))
-//     return (
-//       <div>
-//         <button onClick={logout}>Logout</button>
-//       </div>
-//     );
-//   return (
-//     <div>
-//       <Link href="/login">Login</Link>
-//       <Link href="/signup">Sign Up</Link>
-//     </div>
-//   );
-// }
 export default async function Header({ req }: { req: Request }) {
   if (await authenticated(req))
     return (
-      <div className="w-screen flex justify-end">
+      <div className="w-screen flex justify-end absolute top-0">
         <NavigationMenu className="w-full justify-end p-1">
           <NavigationMenuList className="flex justify-end w-full">
             <NavigationMenuItem>
@@ -42,7 +24,7 @@ export default async function Header({ req }: { req: Request }) {
       </div>
     );
   return (
-    <div className="w-screen flex justify-end">
+    <div className="w-screen flex justify-end absolute top-0">
       <NavigationMenu className="w-full justify-end p-1">
         <NavigationMenuList className="flex justify-end w-full">
           <NavigationMenuItem>

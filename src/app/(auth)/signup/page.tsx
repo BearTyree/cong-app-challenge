@@ -1,25 +1,11 @@
 "use client";
 
-import { useActionState } from "react";
-import { createUser } from "@/actions/auth";
+import Signup from "@/components/signup";
 
-export default function Signup() {
-  const [state, action, pending] = useActionState(createUser, null);
+export default function SignUpPage() {
   return (
-    <div>
-      <div>
-        <p>Signup</p>
-        <form action={action}>
-          <label>Username</label> <br />
-          <input type="text" id="username" name="username" />
-          <br />
-          <label>Password</label>
-          <br />
-          <input type="password" id="password" name="password" />
-          <br />
-          <button>Register</button>
-        </form>
-      </div>
+    <div className="w-screen flex h-screen justify-center items-center">
+      <Signup></Signup>
     </div>
   );
 }

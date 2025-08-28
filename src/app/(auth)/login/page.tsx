@@ -1,25 +1,11 @@
 "use client";
 
-import { useActionState } from "react";
-import { authenticate } from "@/actions/auth";
+import Login from "@/components/login";
 
-export default function Login() {
-  const [state, action, pending] = useActionState(authenticate, null);
+export default function LoginPage() {
   return (
-    <div>
-      <div>
-        <p>Login</p>
-        <form action={action}>
-          <label>Username</label> <br />
-          <input type="text" id="username" name="username" />
-          <br />
-          <label>Password</label>
-          <br />
-          <input type="password" id="password" name="password" />
-          <br />
-          <button>Login</button>
-        </form>
-      </div>
+    <div className="w-screen flex h-screen justify-center items-center">
+      <Login></Login>
     </div>
   );
 }
