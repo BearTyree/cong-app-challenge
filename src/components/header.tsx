@@ -11,7 +11,7 @@ import {
 export default async function Header({ req }: { req: Request }) {
 
   return (
-      <NavigationMenu className="w-full justify-end p-1 absolute right-0">
+      <NavigationMenu className="w-full justify-end p-1 box-border absolute right-0">
         <NavigationMenuList className="flex justify-end w-full">
           {(await authenticated(req)) ? (
             <NavigationMenuItem>

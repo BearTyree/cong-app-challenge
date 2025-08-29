@@ -13,8 +13,7 @@ interface ImageCardProps {
 export default function ImageCard(props: ImageCardProps) {
   const router = useRouter();
   return (
-    <div className="min-w-full cursor-pointer" onClick={() => router.push(`/${props.id}`)}>
-      <div className="w-full mx-auto flex flex-col items-center">
+      <div className="w-full mx-auto flex flex-col items-center cursor-pointer" onClick={() => router.push(`/${props.id}`)}>
         <AspectRatio ratio={1 / 1} className="bg-muted rounded-lg">
           <Image
             src={props.src}
@@ -24,7 +23,8 @@ export default function ImageCard(props: ImageCardProps) {
           />
         </AspectRatio>
         <h1 className="text-left w-full text-lg hover:underline">{props.name}</h1>
+        <p className="text-left w-full text-sm italic text-">{props.dateListed}</p>
       </div>
-    </div>
+
   );
 }

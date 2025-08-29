@@ -32,8 +32,8 @@ export default function RootLayout({
       >
         <SidebarProvider>
           <AppSidebar />
-          <main>
-            <SidebarTrigger className="z-10 absolute m-0.5"/>
+          <main className="w-screen">
+            <SidebarTrigger className="absolute m-0.5"/>
             <Header></Header>
             {children}
           </main>
