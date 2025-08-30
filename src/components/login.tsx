@@ -32,6 +32,7 @@ export default function Login() {
               <Input
                 id="username"
                 type="text"
+                name="username"
                 placeholder="Rex Ample"
                 required
               />
@@ -46,7 +47,7 @@ export default function Login() {
                   Forgot your password?
                 </a>
               </div>
-              <Input id="password" type="password" required />
+              <Input id="password" name="password" type="password" required />
             </div>
           </div>
           <Button type="submit" className="w-full cursor-pointer mt-4">

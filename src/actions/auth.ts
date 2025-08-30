@@ -9,10 +9,7 @@ import generateToken from "@/lib/generateToken";
 import { authenticated } from "@/controllers/auth";
 import { usersTable } from "@/lib/schema";
 
-export async function authenticate(
-  previousState: any,
-  formData: FormData
-): Promise<void> {
+export async function authenticate(_: null, formData: FormData): Promise<void> {
   const cookieStore = await cookies();
 
   const db = await getDbAsync();
@@ -49,7 +46,7 @@ export async function authenticate(
     path: "/",
   });
 
-  redirect("/home");
+  redirect("/");
 }
 
 export async function logout(): Promise<void> {
@@ -60,10 +57,7 @@ export async function logout(): Promise<void> {
   redirect("/login");
 }
 
-export async function createUser(
-  previousState: any,
-  formData: FormData
-): Promise<void> {
+export async function createUser(_: null, formData: FormData): Promise<void> {
   const cookieStore = await cookies();
 
   const db = await getDbAsync();
@@ -71,13 +65,15 @@ export async function createUser(
   const username = formData.get("username") as string;
   const password = formData.get("password") as string;
 
+  console.log(username, password);
+
   if (!username || !password) {
     return;
   }
 
   const arrayBuffer = new Uint8Array(16);
   crypto.getRandomValues(arrayBuffer);
-  let salt = Array.from(arrayBuffer, (byte) =>
+  const salt = Array.from(arrayBuffer, (byte) =>
     byte.toString(16).padStart(2, "0")
   ).join("");
 
@@ -102,13 +98,13 @@ export async function createUser(
     console.log(error);
     return;
   }
-  redirect("/home");
+  redirect("/");
 }
 
-export async function checkToken(req: Request): Promise<void> {
+export async function checkToken(): Promise<void> {
   const cookieStore = await cookies();
 
-  const username = await authenticated(req);
+  const username = await authenticated();
 
   if (!username) {
     cookieStore.delete("token");

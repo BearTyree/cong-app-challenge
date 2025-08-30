@@ -5,7 +5,7 @@ interface CustomJWTPayload extends JWTPayload {
   username?: string;
 }
 
-export async function authenticated(req: Request): Promise<string | false> {
+export async function authenticated(): Promise<string | false> {
   const cookieStore = await cookies();
   const token = cookieStore.get("token")?.value;
 
