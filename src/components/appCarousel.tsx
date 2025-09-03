@@ -68,7 +68,7 @@ export function AppCarousel() {
                         {b.text}
                       </h1>
                       <h1 className="font-bold text-white">{b.sub}</h1>
-                      <Button className="cursor-pointer">Search Now</Button>
+                      <Button className="cursor-pointer hover:bg-[#303030]">Search Now</Button>
                     </div>
                   </AspectRatio>
                 </CardContent>
