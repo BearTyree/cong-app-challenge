@@ -1,7 +1,7 @@
 import { logout } from "@/actions/auth";
 import { authenticated } from "@/controllers/auth";
 import Link from "next/link";
-import { CircleCheckIcon, CircleHelpIcon, CircleIcon } from "lucide-react";
+import { Plus } from "lucide-react";
 import {
   NavigationMenu,
   NavigationMenuItem,
@@ -55,7 +55,7 @@ const components: { title: string; href: string; description: string }[] = [
 export default async function Header() {
   return (
     <div className="flex flex-col min-w-screen fixed top-0 z-50">
-      <NavigationMenu className="min-w-full justify-between py-1 px-2 box-border right-0 border-b z-10 bg-white">
+      <NavigationMenu className="min-w-full justify-between py-2 px-2 box-border right-0 border-b z-10 bg-white">
         <div className="relative w-28 h-10">
           <Link href="/">
             <Image src="/logo.svg" alt="logo" fill></Image>
@@ -64,11 +64,24 @@ export default async function Header() {
         {(await authenticated()) && <SearchBar></SearchBar>}
         <NavigationMenuList className="flex justify-end w-full">
           {(await authenticated()) ? (
-            <NavigationMenuItem>
-              <NavigationMenuLink asChild>
-                <button onClick={logout}>Logout</button>
-              </NavigationMenuLink>
-            </NavigationMenuItem>
+            <>
+              <NavigationMenuItem>
+                <NavigationMenuLink
+                  asChild
+                  className="bg-[#78A75A] rounded-sm cursor-pointer hover:bg-[#638b4a] active:bg-[#638b4a] focus:outline-none focus:bg-[#638b4a] visited:bg-[#78A75A]"
+                >
+                  <Link href="/" className="flex flex-row items-center">
+                    <Plus color="white" size={2} strokeWidth={3} />
+                    <h1 className="text-white">Donate</h1>
+                  </Link>
+                </NavigationMenuLink>
+              </NavigationMenuItem>
+              <NavigationMenuItem>
+                <NavigationMenuLink asChild>
+                  <button onClick={logout}>Logout</button>
+                </NavigationMenuLink>
+              </NavigationMenuItem>
+            </>
           ) : (
             <>
               <NavigationMenuItem>
