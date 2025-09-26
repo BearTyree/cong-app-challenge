@@ -11,7 +11,14 @@
 		"preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
 		"cf-typegen": "wrangler types --env-interface CloudflareEnv ./cloudflare-env.d.ts"
 	},
+	"pnpm": {
+		"overrides": {
+		  "zod": "^4.1.11",
+		  "miniflare>zod": "3.22.3"
+		}
+	  },
 	"dependencies": {
+		"@hookform/resolvers": "^5",
 		"@opennextjs/cloudflare": "^1.6.5",
 		"@radix-ui/react-aspect-ratio": "^1.1.7",
 		"@radix-ui/react-dialog": "^1.1.15",
@@ -31,7 +38,9 @@
 		"next": "15.4.6",
 		"react": "19.1.0",
 		"react-dom": "19.1.0",
-		"tailwind-merge": "^3.3.1"
+		"react-hook-form": "^7",
+		"tailwind-merge": "^3.3.1",
+		"zod": "^4"
 	},
 	"devDependencies": {
 		"@eslint/eslintrc": "^3",

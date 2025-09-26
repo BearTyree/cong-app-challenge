@@ -141,6 +141,17 @@ export default async function Header() {
         </div>
         {(await authenticated()) && <SearchBar></SearchBar>}
         <NavigationMenuList className="flex justify-end w-full">
+          <NavigationMenuItem>
+            <NavigationMenuLink
+              asChild
+              className="bg-[#78A75A] rounded-sm cursor-pointer hover:bg-[#638b4a] active:bg-[#638b4a] focus:outline-none focus:bg-[#638b4a]"
+            >
+              <Link href="/listing/new" className="flex flex-row items-center px-3 py-2">
+                <Plus color="white" size={16} strokeWidth={3} className="mr-1" />
+                <h1 className="text-white text-sm">New Listing (TEMP)</h1>
+              </Link>
+            </NavigationMenuLink>
+          </NavigationMenuItem>
           {(await authenticated()) ? (
             <>
               <NavigationMenuItem>

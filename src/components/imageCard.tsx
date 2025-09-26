@@ -13,7 +13,7 @@ interface ImageCardProps {
 export default function ImageCard(props: ImageCardProps) {
   const router = useRouter();
   return (
-      <div className="w-full mx-auto flex flex-col items-center cursor-pointer" onClick={() => router.push(`/${props.id}`)}>
+      <div className="w-full mx-auto flex flex-col items-center cursor-pointer" onClick={() => router.push(`/listing/${props.id}`)}>
         <AspectRatio ratio={1 / 1} className="bg-muted rounded-lg">
           <Image
             src={props.src}
