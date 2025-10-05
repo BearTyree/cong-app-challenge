@@ -77,10 +77,11 @@ export function AppCarousel() {
 
                     <div
                       className={clsx(
-                        `absolute flex flex-col gap-1 w-1/2 h-full justify-center box-border p-15 bg-[${b.color}] z-20`,
+                        `absolute flex flex-col gap-1 w-1/2 h-full justify-center box-border p-15 z-20`,
                         { "items-start left-0": !b.right },
                         { "items-end right-0": b.right }
                       )}
+                      style={{backgroundColor: b.color}}
                     >
                       <h1 className={clsx("font-bold text-4xl text-white",
                         {"text-left": !b.right},
