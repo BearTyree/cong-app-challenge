@@ -10,7 +10,7 @@ export default function Landing() {
       </p>
       <p className="mb-3 text-xl italic">built by communities</p>
 
-      <Button className="cursor-pointer">Donate Now</Button>
+      <Button className="bg-[#212121] cursor-pointer hover:bg-[#303030]">Donate Now</Button>
     </div>
   );
 }

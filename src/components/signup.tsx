@@ -41,7 +41,7 @@ export default function Signup() {
               <Input id="password" name="password" type="password" required />
             </div>
           </div>
-          <Button type="submit" className="w-full cursor-pointer mt-4">
+          <Button type="submit" className="bg-[#212121] hover:bg-[#303030] w-full cursor-pointer mt-4">
             Register
           </Button>
         </form>
