@@ -1,4 +1,5 @@
 import { AppCarousel } from "@/components/appCarousel";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import ImageGrid from "@/components/imageGrid";
 
@@ -11,10 +12,11 @@ export default function Landing() {
           A donation driven marketplace for communities
         </p>
         <p className="mb-3 text-xl italic">built by communities</p>
-
-        <Button className="bg-[#212121] cursor-pointer hover:bg-[#303030]">
-          Donate Now
-        </Button>
+        <Link href="/listing/new">
+          <Button className="bg-[#212121] cursor-pointer hover:bg-[#303030]">
+            Donate Now
+          </Button>
+        </Link>
       </div>
       <p className="w-full font-bold">From Top Givers</p>
       <ImageGrid></ImageGrid>
