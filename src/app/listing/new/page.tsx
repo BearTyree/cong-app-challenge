@@ -5,7 +5,7 @@ import ListingForm from "@/components/forms/ListingForm"
 export default function NewListingPage() {
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-4xl mx-auto px-4 py-8">
+      <div className="max-w-4xl mx-auto px-4 py-15">
         <div className="mb-6">
           <Link href="/dashboard" className="text-gray-600 hover:text-gray-900 inline-flex items-center">
             <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
