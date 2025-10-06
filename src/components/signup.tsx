@@ -17,10 +17,10 @@ export default function Signup() {
   const [state, action] = useActionState(createUser, null);
   return (
     <Card className="w-full max-w-sm">
-      <CardHeader>
-        <CardTitle>Register for an account</CardTitle>
-        <CardDescription>Enter a username and password</CardDescription>
-      </CardHeader>
+      <div className="flex flex-col items-center justify-center">
+        <CardTitle className="text-3xl">Sign Up</CardTitle>
+        <CardDescription>Get started by creating an account.</CardDescription>
+      </div>
       <CardContent>
         <form action={action}>
           <div className="flex flex-col gap-6">
@@ -41,7 +41,10 @@ export default function Signup() {
               <Input id="password" name="password" type="password" required />
             </div>
           </div>
-          <Button type="submit" className="w-full cursor-pointer mt-4">
+          <Button
+            type="submit"
+            className="bg-[#212121] hover:bg-[#303030] w-full cursor-pointer mt-4"
+          >
             Register
           </Button>
         </form>

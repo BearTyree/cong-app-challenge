@@ -18,12 +18,13 @@ export default function Login() {
   const [state, action, pending] = useActionState(authenticate, null);
   return (
     <Card className="w-full max-w-sm">
-      <CardHeader>
-        <CardTitle>Login to your account</CardTitle>
+      <div className="flex flex-col items-center justify-center">
+        <CardTitle className="text-3xl">Login</CardTitle>
         <CardDescription>
-          Enter your email username and password
+          To post items, place reservations, and more.
         </CardDescription>
-      </CardHeader>
+      </div>
+
       <CardContent>
         <form action={action}>
           <div className="flex flex-col gap-6">
@@ -50,7 +51,10 @@ export default function Login() {
               <Input id="password" name="password" type="password" required />
             </div>
           </div>
-          <Button type="submit" className="w-full cursor-pointer mt-4">
+          <Button
+            type="submit"
+            className="bg-[#212121] hover:bg-[#303030] w-full cursor-pointer mt-4"
+          >
             Login
           </Button>
           <div className="mt-4 text-center text-sm">
