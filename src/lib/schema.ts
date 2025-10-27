@@ -7,3 +7,11 @@ export const usersTable = sqliteTable("User", {
   passwordHash: text("passwordHash").notNull(),
   passwordSalt: text("passwordSalt").notNull(),
 });
+
+export const listingTable = sqliteTable("Listing", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+
+  title: text("title").notNull(),
+  category: text("category"),
+  description: text("description").notNull(),
+});
