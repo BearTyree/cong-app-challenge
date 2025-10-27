@@ -1,7 +1,17 @@
-"use client";
+'use server';
+
 import ImageCard from "@/components/imageCard";
 
-export default function ImageGrid() {
+export default async function ImageGrid({
+  query,
+  currentPage
+}
+  : {
+    query?: string;
+    currentPage?: number;
+  }
+) {
+  // const products = await fetchFilteredProducts(query, currentPage); // Use this code when fetching api is available
   const products = [
     { id: 1, src: "/rackets.png", name: "Racket", dateListed: "Saturday"},
     { id: 2, src: "/rackets.png", name: "Shoes", dateListed: "Saturday"},
