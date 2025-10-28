@@ -130,3 +130,12 @@ export const formatAvailability = (days: WeekDay[], startTime: string, endTime: 
   ).join(", ")
   return `${dayLabels} from ${startTime} to ${endTime}`
 }
+
+//Should not be neeeded to be done via index but via text.
+export const getCategoryLabel = (categoryId: string): string => {
+  return CATEGORIES.find((category) => category.id === categoryId)?.label ?? categoryId
+}
+
+export const getConditionLabel = (conditionValue: string): string => {
+  return CONDITIONS.find((condition) => condition.value === conditionValue)?.label ?? conditionValue
+}

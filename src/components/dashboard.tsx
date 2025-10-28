@@ -1,4 +1,3 @@
-"use client"
 import { Banner } from "@/components/banner"
 import ImageRow from "@/components/imageRow"
 
