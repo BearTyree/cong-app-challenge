@@ -1,13 +1,12 @@
 "use client"
 import { Banner } from "@/components/banner"
-import ImageRow from "@/components/imageRow"
+import ImageGrid from "@/components/imageGrid"
 
 export default function Dashboard() {
     return (
         <div className="w-full h-full flex flex-col justify-center items-center">
             <Banner></Banner>
-            <p className="w-full font-bold">From Top Givers</p>
-            <ImageRow></ImageRow>
+            <ImageGrid></ImageGrid>
         </div>
         
     )

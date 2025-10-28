@@ -13,110 +13,122 @@ import {
 import Image from "next/image";
 import { SearchBar } from "@/components/searchBar";
 
-const peopleComponents: {
-  title: string;
-  href: string;
-  description?: string;
-}[] = [
+const peopleComponents: { title: string; href: string; description?: string}[] = [
   {
     title: "Shoes",
-    href: "/search?query=mens+shoes",
-    description: "New and Vintage Sneakers",
+    href: "/#",
+    description:
+      "New and Vintage Sneakers",
   },
   {
     title: "Clothing",
-    href: "/search?query=mens+clothing",
-    description: "Latest styles, all gently used",
+    href: "/#",
+    description:
+      "Latest styles, all gently used",
   },
   {
     title: "Accessories",
-    href: "/search?query=mens+accessories",
-    description: "Spice up your outfits",
+    href: "/#",
+    description:
+      "Spice up your outfits"
   },
   {
     title: "Athletic Clothing",
-    href: "/search?query=mens+athletic+clothing",
-    description: "Wide selection for all athletes",
+    href: "/#",
+    description:
+      "Wide selection for all athletes"
   },
   {
     title: "Athletic Equipment",
-    href: "/search?query=mens+athletic+equipment",
-    description: "New paddles and balls available",
+    href: "/#",
+    description:
+      "New paddles and balls available"
   },
   {
     title: "Hygine",
-    href: "/search?query=mens+hygine",
-    description: "All in original packaging",
+    href: "/#",
+    description:
+      "All in original packaging"
   },
 ];
 
-const techComponents: { title: string; href: string; description?: string }[] =
-  [
-    {
-      title: "Smartphones",
-      href: "/search?query=smartphones",
-      description: "Refurbished IPhones and Andrioids",
-    },
-    {
-      title: "Tablets",
-      href: "/search?query=tablets",
-      description: "eReaders, IPads, and more",
-    },
-    {
-      title: "Television",
-      href: "/search?query=television",
-      description: "Cable not included",
-    },
-    {
-      title: "Laptops",
-      href: "/search?query=laptops",
-      description: "Portable and affordable",
-    },
-    {
-      title: "Cords and Chargers",
-      href: "/search?query=cords+chargers",
-      description: "USBs, HDMI, and Lightning",
-    },
-    {
-      title: "Earphones and Microphones",
-      href: "/search?query=earphones+microphones",
-      description: "Namebrand, mostly functional",
-    },
-  ];
+const techComponents: { title: string; href: string; description?: string}[] = [
+  {
+    title: "Smartphones",
+    href: "/#",
+    description:
+      "Refurbished IPhones and Andrioids",
+  },
+  {
+    title: "Tablets",
+    href: "/#",
+    description:
+      "eReaders, IPads, and more",
+  },
+  {
+    title: "Television",
+    href: "/#",
+    description:
+      "Cable not included"
+  },
+  {
+    title: "Laptops",
+    href: "/#",
+    description:
+      "Portable and affordable"
+  },
+  {
+    title: "Cords and Chargers",
+    href: "/#",
+    description:
+      "USBs, HDMI, and Lightning"
+  },
+  {
+    title: "Earphones and Microphones",
+    href: "/#",
+    description:
+      "Namebrand, mostly functional"
+  },
+];
 
-const homeComponents: { title: string; href: string; description?: string }[] =
-  [
-    {
-      title: "Furniture",
-      href: "/search?query=furniture",
-      description: "Well loved chairs and tables",
-    },
-    {
-      title: "Appliances",
-      href: "/search?query=appliances",
-      description: "Coffee makers, toasters, and fans",
-    },
-    {
-      title: "Decorations",
-      href: "/search?query=decorations",
-      description: "Various decor for every season",
-    },
-    {
-      title: "Comfort",
-      href: "/search?query=comfort",
-      description: "Blankets and pillows",
-    },
-    {
-      title: "Bags",
-      href: "/search?query=bags",
-      description: "Totes, Backpacks, and Fannys",
-    },
-    {
-      title: "Misc",
-      href: "/search?query=misc",
-      description: "Toys, plates, and almost anything",
-    },
-  ];
+const homeComponents: { title: string; href: string; description?: string}[] = [
+  {
+    title: "Furniture",
+    href: "/#",
+    description:
+      "Well loved chairs and tables",
+  },
+  {
+    title: "Appliances",
+    href: "/#",
+    description:
+      "Coffee makers, toasters, and fans",
+  },
+  {
+    title: "Decorations",
+    href: "/#",
+    description:
+      "Various decor for every season"
+  },
+  {
+    title: "Comfort",
+    href: "/#",
+    description:
+      "Blankets and pillows"
+  },
+  {
+    title: "Bags",
+    href: "/#",
+    description:
+      "Totes, Backpacks, and Fannys"
+  },
+  {
+    title: "Misc",
+    href: "/#",
+    description:
+      "Toys, plates, and almost anything"
+  },
+];
 
 export default async function Header() {
   return (
@@ -134,22 +146,25 @@ export default async function Header() {
               asChild
               className="bg-[#78A75A] rounded-sm cursor-pointer hover:bg-[#638b4a] active:bg-[#638b4a] focus:outline-none focus:bg-[#638b4a]"
             >
-              <Link
-                href="/listing/new"
-                className="flex flex-row items-center px-3 py-2"
-              >
-                <Plus
-                  color="white"
-                  size={16}
-                  strokeWidth={3}
-                  className="mr-1"
-                />
-                <h1 className="text-white text-sm">New Listing</h1>
+              <Link href="/listing/new" className="flex flex-row items-center px-3 py-2">
+                <Plus color="white" size={16} strokeWidth={3} className="mr-1" />
+                <h1 className="text-white text-sm">New Listing (TEMP)</h1>
               </Link>
             </NavigationMenuLink>
           </NavigationMenuItem>
           {(await authenticated()) ? (
             <>
+              <NavigationMenuItem>
+                <NavigationMenuLink
+                  asChild
+                  className="bg-[#78A75A] rounded-sm cursor-pointer hover:bg-[#638b4a] active:bg-[#638b4a] focus:outline-none focus:bg-[#638b4a] visited:bg-[#78A75A]"
+                >
+                  <Link href="/" className="flex flex-row items-center">
+                    <Plus color="white" size={2} strokeWidth={3} />
+                    <h1 className="text-white">Donate</h1>
+                  </Link>
+                </NavigationMenuLink>
+              </NavigationMenuItem>
               <NavigationMenuItem>
                 <NavigationMenuLink asChild>
                   <button onClick={logout}>Logout</button>

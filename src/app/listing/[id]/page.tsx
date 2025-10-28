@@ -87,8 +87,8 @@ export default async function ListingPage({
   return (
 <<<<<<< HEAD
     <div className="min-h-screen bg-white">
-      <div className="max-w-7xl mx-auto px-4 py-8 pt-20">
-        <Link href="/" className="text-gray-600 hover:text-gray-900 mb-6 inline-block">
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        <Link href="/dashboard" className="text-gray-600 hover:text-gray-900 mb-6 inline-block">
           ← Back to listings
         </Link>
 

@@ -2,8 +2,6 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/header";
-import clsx from "clsx";
-import { authenticated } from "@/controllers/auth";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -30,8 +28,8 @@ export default async function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <Header></Header>
-        <div className={clsx({"mt-10": await authenticated()})}>{children}</div>
+          <Header></Header>
+          {children}
       </body>
     </html>
   );
