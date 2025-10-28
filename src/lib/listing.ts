@@ -81,7 +81,6 @@ export const listingSchema = z.object({
   pickupInstructions: z.string()
     .max(500, "Instructions must be less than 500 characters")
     .optional(),
-
   availabilityDays: z.array(
     z.enum(WEEKDAYS.map(d => d.value) as [WeekDay, ...WeekDay[]])
   ).min(1, "Please select at least one day"),

@@ -2,6 +2,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import FormField from "./FormField";
 import ImagePreview from "./ImagePreview";
 import {
@@ -15,8 +16,25 @@ import {
   WeekDay,
 } from "@/lib/listing";
 
+type PresignedUpload = {
+  index: number;
+  key: string;
+  uploadUrl: string;
+  headers: Record<string, string>;
+  publicUrl: string;
+};
+
+interface PresignResponse {
+  uploads: PresignedUpload[];
+}
+
 export default function ListingForm() {
   const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [uploadProgress, setUploadProgress] = useState<number>(0);
+  const [serverError, setServerError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  const router = useRouter();
 
   const {
     register,
@@ -24,18 +42,134 @@ export default function ListingForm() {
     formState: { errors, isSubmitting },
     setValue,
     watch,
+    reset,
   } = useForm<ListingFormData>({
     resolver: zodResolver(listingSchema),
     defaultValues: {
       availabilityDays: [],
+      availabilityTimeStart: "",
+      availabilityTimeEnd: "",
+      pickupAddress: "",
+      pickupInstructions: "",
     },
   });
 
   const selectedDays = watch("availabilityDays");
 
-  const onSubmit = (data: ListingFormData) => {
-    console.log("Form submitted with data:", data);
-    alert("Form validated successfully! Check console for data.");
+  const onSubmit = async (data: ListingFormData) => {
+    setServerError(null);
+    setSuccessMessage(null);
+    setUploadProgress(0);
+
+    if (!data.images?.length) {
+      setServerError("Please add at least one image before submitting.");
+      return;
+    }
+
+    try {
+      const presignResponse = await fetch("/api/uploads/presign", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          files: data.images.map((file, index) => ({
+            size: file.size,
+            type: file.type,
+            index,
+          })),
+        }),
+      });
+
+      if (!presignResponse.ok) {
+        const errorBody = await presignResponse.json().catch(() => ({}));
+        throw new Error(
+          errorBody.error ??
+            "Failed to request upload URLs. Please try again later."
+        );
+      }
+
+      const presignData: PresignResponse = await presignResponse.json();
+
+      const orderedUploads = presignData.uploads.sort(
+        (a, b) => a.index - b.index
+      );
+
+      for (const [position, upload] of orderedUploads.entries()) {
+        const file = data.images[upload.index];
+        const uploadResult = await fetch(upload.uploadUrl, {
+          method: "PUT",
+          headers: upload.headers,
+          body: file,
+        });
+
+        if (!uploadResult.ok) {
+          throw new Error(
+            `Upload failed for image ${upload.index + 1}. Please retry.`
+          );
+        }
+
+        setUploadProgress(
+          Math.round(((position + 1) / orderedUploads.length) * 100)
+        );
+      }
+
+      const createListingResponse = await fetch("/api/listings", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          title: data.title,
+          category: data.category,
+          condition: data.condition,
+          description: data.description,
+          images: orderedUploads.map((upload) => upload.key),
+          pickupAddress: data.pickupAddress,
+          pickupInstructions: data.pickupInstructions ?? "",
+          availabilityDays: data.availabilityDays,
+          availabilityTimeStart: data.availabilityTimeStart,
+          availabilityTimeEnd: data.availabilityTimeEnd,
+        }),
+      });
+
+      if (!createListingResponse.ok) {
+        const errorBody = await createListingResponse.json().catch(() => ({}));
+        throw new Error(
+          errorBody.error
+            ? `${errorBody.error}${
+                errorBody.details ? `: ${errorBody.details}` : ""
+              }`
+            : "Listing could not be saved. Please try again later."
+        );
+      }
+
+      const listingResult: { id: number } =
+        await createListingResponse.json();
+
+      setSuccessMessage("Listing created successfully.");
+
+      reset({
+        availabilityDays: [],
+        availabilityTimeStart: "",
+        availabilityTimeEnd: "",
+      });
+      setImageFiles([]);
+      setValue("images", [], { shouldValidate: true });
+      setUploadProgress(0);
+
+      if (listingResult?.id) {
+        router.push(`/listing/${listingResult.id}`);
+      }
+    } catch (error) {
+      console.error("Listing submission failed", error);
+      setUploadProgress(0);
+      setServerError(
+        error instanceof Error
+          ? error.message
+          : "Something went wrong while submitting the listing."
+      );
+    }
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -134,7 +268,7 @@ export default function ListingForm() {
           error={
             errors.images
               ? { message: errors.images.message, type: "required" }
-              : undefined
+            : undefined
           }
           required
         >
@@ -150,6 +284,18 @@ export default function ListingForm() {
             {FORM_LIMITS.maxFileSize / 1024 / 1024}MB each
           </p>
         </FormField>
+
+        {uploadProgress > 0 && uploadProgress < 100 && (
+          <p className="text-sm text-gray-600 mt-2">
+            Uploading images... {uploadProgress}%
+          </p>
+        )}
+        {serverError && (
+          <p className="text-sm text-red-600 mt-2">{serverError}</p>
+        )}
+        {successMessage && (
+          <p className="text-sm text-green-600 mt-2">{successMessage}</p>
+        )}
 
         <div className="mt-4">
           <ImagePreview
@@ -230,6 +376,31 @@ export default function ListingForm() {
               ))}
             </div>
           </FormField>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <FormField
+              label="Pickup Start Time"
+              error={errors.availabilityTimeStart}
+              required
+            >
+              <input
+                {...register("availabilityTimeStart")}
+                type="time"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#9bc27d] focus:border-[#78A75A]"
+              />
+            </FormField>
+            <FormField
+              label="Pickup End Time"
+              error={errors.availabilityTimeEnd}
+              required
+            >
+              <input
+                {...register("availabilityTimeEnd")}
+                type="time"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#9bc27d] focus:border-[#78A75A]"
+              />
+            </FormField>
+          </div>
         </div>
       </div>
 
