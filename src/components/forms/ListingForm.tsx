@@ -14,6 +14,7 @@ import {
   validateImageFile,
   WeekDay,
 } from "@/lib/listing";
+import { createListing } from "@/actions/listing";
 
 export default function ListingForm() {
   const [imageFiles, setImageFiles] = useState<File[]>([]);
@@ -36,6 +37,11 @@ export default function ListingForm() {
   const onSubmit = (data: ListingFormData) => {
     console.log("Form submitted with data:", data);
     alert("Form validated successfully! Check console for data.");
+    createListing(data);
+  };
+
+  const onInvalid = () => {
+    alert("Invalid");
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -61,7 +67,7 @@ export default function ListingForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+    <form onSubmit={handleSubmit(onSubmit, onInvalid)} className="space-y-6">
       <div className="bg-white rounded-lg border border-gray-200 p-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">
           Item Details
