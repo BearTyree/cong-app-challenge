@@ -1,5 +1,4 @@
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+// Edge-safe R2 presigner (no Node APIs, works on Cloudflare Workers)
 
 const requiredEnv = (key: string): string => {
   const value = process.env[key];
@@ -9,30 +8,132 @@ const requiredEnv = (key: string): string => {
   return value;
 };
 
-const endpointFromAccount = (accountId: string) =>
-  `https://${accountId}.r2.cloudflarestorage.com`;
+// Build the R2 endpoint host from account id when constructing URLs
 
-let client: S3Client | null = null;
+// --- Minimal AWS SigV4 (query) presign for S3-compatible R2 ---
+const toHex = (buffer: ArrayBuffer): string =>
+  Array.from(new Uint8Array(buffer))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
 
-export const getR2Client = (): S3Client => {
-  if (client) {
-    return client;
-  }
+const utf8 = (s: string): Uint8Array => new TextEncoder().encode(s);
 
-  const accountId = requiredEnv("R2_ACCOUNT_ID");
-  const accessKeyId = requiredEnv("R2_ACCESS_KEY_ID");
-  const secretAccessKey = requiredEnv("R2_SECRET_ACCESS_KEY");
+const sha256 = async (data: string | ArrayBuffer): Promise<ArrayBuffer> => {
+  const bytes = typeof data === "string" ? utf8(data) : new Uint8Array(data);
+  return crypto.subtle.digest("SHA-256", bytes as unknown as BufferSource);
+};
 
-  client = new S3Client({
-    region: "auto",
-    endpoint: endpointFromAccount(accountId),
-    credentials: {
-      accessKeyId,
-      secretAccessKey,
-    },
-  });
+const hmac = async (
+  key: ArrayBuffer | string,
+  data: string
+): Promise<ArrayBuffer> => {
+  const rawKey = typeof key === "string" ? utf8(key) : new Uint8Array(key);
+  const cryptoKey = await crypto.subtle.importKey(
+    "raw",
+    rawKey as unknown as BufferSource,
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"]
+  );
+  return crypto.subtle.sign(
+    "HMAC",
+    cryptoKey,
+    utf8(data) as unknown as BufferSource
+  );
+};
 
-  return client;
+const getSigningKey = async (
+  secretAccessKey: string,
+  dateStamp: string,
+  region: string,
+  service: string
+): Promise<ArrayBuffer> => {
+  const kDate = await hmac("AWS4" + secretAccessKey, dateStamp);
+  const kRegion = await hmac(kDate, region);
+  const kService = await hmac(kRegion, service);
+  const kSigning = await hmac(kService, "aws4_request");
+  return kSigning;
+};
+
+// Encode a single URI path segment per RFC 3986
+const encodePath = (path: string): string =>
+  path
+    .split("/")
+    .map((seg) => encodeURIComponent(seg))
+    .join("/");
+
+// Build a presigned URL for PUT using query auth (SigV4)
+const presignPutObject = async (params: {
+  accountId: string;
+  bucket: string;
+  key: string;
+  accessKeyId: string;
+  secretAccessKey: string;
+  expiresIn: number; // seconds
+}): Promise<string> => {
+  const { accountId, bucket, key, accessKeyId, secretAccessKey, expiresIn } =
+    params;
+  const host = `${accountId}.r2.cloudflarestorage.com`;
+  const region = "auto"; // R2 uses "auto" for SigV4 scope
+  const service = "s3";
+  const now = new Date();
+  const amzDate = now
+    .toISOString()
+    .replace(/[-:]/g, "")
+    .replace(/\.\d{3}Z$/, "Z"); // YYYYMMDDTHHMMSSZ
+  const dateStamp = amzDate.slice(0, 8); // YYYYMMDD
+
+  const encodedPath = `/${encodeURIComponent(bucket)}/${encodePath(key)}`;
+
+  const credentialScope = `${dateStamp}/${region}/${service}/aws4_request`;
+
+  // Query params to sign (sorted later)
+  const qp: Record<string, string> = {
+    "X-Amz-Algorithm": "AWS4-HMAC-SHA256",
+    "X-Amz-Credential": `${accessKeyId}/${credentialScope}`,
+    "X-Amz-Date": amzDate,
+    "X-Amz-Expires": String(Math.min(Math.max(1, expiresIn), 604800)), // 1..7d
+    "X-Amz-SignedHeaders": "host",
+    // Not strictly required, but mirrors AWS SDK for clarity of intent
+    "x-id": "PutObject",
+  };
+
+  const canonicalQuery = Object.keys(qp)
+    .sort()
+    .map((k) => `${encodeURIComponent(k)}=${encodeURIComponent(qp[k])}`)
+    .join("&");
+
+  const canonicalHeaders = `host:${host}\n`;
+  const signedHeaders = "host";
+  const payloadHash = "UNSIGNED-PAYLOAD";
+
+  const canonicalRequest = [
+    "PUT",
+    encodedPath,
+    canonicalQuery,
+    canonicalHeaders,
+    signedHeaders,
+    payloadHash,
+  ].join("\n");
+
+  const hashedCanonicalRequest = toHex(await sha256(canonicalRequest));
+  const stringToSign = [
+    "AWS4-HMAC-SHA256",
+    amzDate,
+    credentialScope,
+    hashedCanonicalRequest,
+  ].join("\n");
+
+  const signingKey = await getSigningKey(
+    secretAccessKey,
+    dateStamp,
+    region,
+    service
+  );
+  const signature = toHex(await hmac(signingKey, stringToSign));
+
+  const finalQuery = `${canonicalQuery}&X-Amz-Signature=${signature}`;
+  return `https://${host}${encodedPath}?${finalQuery}`;
 };
 
 interface PresignedUploadParams {
@@ -51,24 +152,25 @@ export interface PresignedUpload {
 export const createPresignedUpload = async ({
   key,
   contentType,
-  contentLength,
+  contentLength: _contentLength,
   expiresIn = 600,
 }: PresignedUploadParams): Promise<PresignedUpload> => {
-  const client = getR2Client();
+  // not used in query-signing; retained for API compatibility
+  void _contentLength;
+  // Build a presigned URL without Node-specific AWS SDK
+  const accountId = requiredEnv("R2_ACCOUNT_ID");
+  const accessKeyId = requiredEnv("R2_ACCESS_KEY_ID");
+  const secretAccessKey = requiredEnv("R2_SECRET_ACCESS_KEY");
   const bucket = requiredEnv("R2_BUCKET_NAME");
 
-  const command = new PutObjectCommand({
-    Bucket: bucket,
-    Key: key,
-    ContentType: contentType,
-    ContentLength: contentLength,
-    Metadata: {
-      "expected-size": String(contentLength),
-      "uploaded-at": new Date().toISOString(),
-    },
+  const uploadUrl = await presignPutObject({
+    accountId,
+    bucket,
+    key,
+    accessKeyId,
+    secretAccessKey,
+    expiresIn,
   });
-
-  const uploadUrl = await getSignedUrl(client, command, { expiresIn });
 
   return {
     key,
