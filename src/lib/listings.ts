@@ -6,7 +6,6 @@ import { getCategoryLabel, getConditionLabel } from "@/lib/listing";
 import { listingTable } from "@/lib/schema";
 
 type ListingRow = typeof listingTable.$inferSelect;
-
 export interface ListingCardData {
   id: number;
   title: string;
@@ -148,7 +147,7 @@ const resolveImages = (row: ListingRow) => {
 };
 
 const mapRowToCard = (row: ListingRow): ListingCardData => {
-  const { images, primaryImage } = resolveImages(row);
+  const { primaryImage } = resolveImages(row);
 
   return {
     id: row.id,

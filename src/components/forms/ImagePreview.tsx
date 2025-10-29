@@ -1,4 +1,5 @@
 "use client"
+import Image from "next/image"
 import { useState, useEffect } from "react"
 import { formatFileSize } from "@/lib/listing"
 
@@ -33,11 +34,14 @@ export default function ImagePreview({ files, onRemove, maxImages }: ImagePrevie
     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
       {files.map((file, index) => (
         <div key={index} className="relative group">
-          <div className="aspect-square rounded-lg overflow-hidden bg-gray-100">
-            <img
+          <div className="relative aspect-square rounded-lg overflow-hidden bg-gray-100">
+            <Image
               src={previews[index]}
               alt={`Preview ${index + 1}`}
-              className="w-full h-full object-cover"
+              fill
+              className="object-cover"
+              sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 20vw"
+              unoptimized
             />
           </div>
           <button

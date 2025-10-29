@@ -4,7 +4,6 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardHeader,
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -14,7 +13,7 @@ import { createUser } from "@/actions/auth";
 import { useActionState } from "react";
 
 export default function Signup() {
-  const [state, action] = useActionState(createUser, null);
+  const [, action] = useActionState(createUser, null);
   return (
     <Card className="w-full max-w-sm">
       <div className="flex flex-col items-center justify-center">

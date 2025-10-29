@@ -1,4 +1,3 @@
-import { SearchBar } from "@/components/searchBar"
 import { AppCarousel } from "@/components/appCarousel"
 
 export function Banner() {
