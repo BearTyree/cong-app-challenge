@@ -1,20 +1,15 @@
 "use server";
 
-import { useRouter, useSearchParams } from "next/navigation";
+import { redirect } from "next/navigation";
 
 export async function search(_: null, formData: FormData): Promise<void> {
-  const searchParams = useSearchParams();
-  const { replace } = useRouter();
-  function handleSearch(term: string) {
-    const params = new URLSearchParams(searchParams);
-    if (term) {
-      params.set("query", term);
-    } else {
-      params.delete("query");
-    }
-    replace(`/search?${params.toString()}`);
-  }
-  const search = formData.get("search") as string;
+  const term = (formData.get("search") as string | null)?.trim();
 
-  handleSearch(search);
+  if (term) {
+    const params = new URLSearchParams();
+    params.set("query", term);
+    redirect(`/search?${params.toString()}`);
+  }
+
+  redirect("/search");
 }

@@ -6,7 +6,6 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardHeader,
   CardTitle,
 } from "@/components/ui/card";
 import { useActionState } from "react";
@@ -15,7 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 export default function Login() {
-  const [state, action, pending] = useActionState(authenticate, null);
+  const [, action] = useActionState(authenticate, null);
   return (
     <Card className="w-full max-w-sm">
       <div className="flex flex-col items-center justify-center">
