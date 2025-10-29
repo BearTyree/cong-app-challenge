@@ -81,7 +81,6 @@ export const listingSchema = z.object({
   pickupInstructions: z.string()
     .max(500, "Instructions must be less than 500 characters")
     .optional(),
-
   availabilityDays: z.array(
     z.enum(WEEKDAYS.map(d => d.value) as [WeekDay, ...WeekDay[]])
   ).min(1, "Please select at least one day"),
@@ -130,4 +129,13 @@ export const formatAvailability = (days: WeekDay[], startTime: string, endTime: 
     WEEKDAYS.find(d => d.value === day)?.label || day
   ).join(", ")
   return `${dayLabels} from ${startTime} to ${endTime}`
+}
+
+//Should not be neeeded to be done via index but via text.
+export const getCategoryLabel = (categoryId: string): string => {
+  return CATEGORIES.find((category) => category.id === categoryId)?.label ?? categoryId
+}
+
+export const getConditionLabel = (conditionValue: string): string => {
+  return CONDITIONS.find((condition) => condition.value === conditionValue)?.label ?? conditionValue
 }

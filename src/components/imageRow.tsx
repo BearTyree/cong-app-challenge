@@ -1,20 +1,31 @@
-"use client";
 import ImageCard from "@/components/imageCard";
+import { getListingsPage } from "@/lib/listings";
 
-export default function ImageRow() {
-  const products = [
-    { id: 1, src: "/rackets.png", name: "Racket", dateListed: "Saturday"},
-    { id: 2, src: "/rackets.png", name: "Shoes", dateListed: "Saturday"},
-    { id: 3, src: "/rackets.png", name: "Balls", dateListed: "Saturday"},
-    { id: 4, src: "/rackets.png", name: "Tennis Bag", dateListed: "Saturday"},
-    { id: 5, src: "/rackets.png", name: "Tennis Bag", dateListed: "Saturday"},
-    { id: 6, src: "/rackets.png", name: "Tennis Bag", dateListed: "Saturday"},
-    // …more
-  ];
+const DEFAULT_ROW_SIZE = 8;
+
+export default async function ImageRow() {
+  const { listings } = await getListingsPage({ pageSize: DEFAULT_ROW_SIZE });
+
+  if (listings.length === 0) {
+    return (
+      <div className="w-full box-border p-5 text-center text-sm text-gray-600">
+        No listings available yet. Check back soon!
+      </div>
+    );
+  }
+
   return (
-    <div className="flex gap-5 box-border p-5 overflow-x-scroll w-full overflow-y-scroll">
-      {products.map((p) => (
-        <ImageCard key={p.id} src={p.src} name={p.name} id={p.id} dateListed={p.dateListed}></ImageCard>
+    <div className="flex gap-5 box-border p-5 overflow-x-auto w-full">
+      {listings.map((listing) => (
+        <div key={listing.id} className="min-w-[180px] max-w-[200px]">
+          <ImageCard
+            id={listing.id}
+            title={listing.title}
+            imageSrc={listing.primaryImage}
+            condition={listing.conditionLabel}
+            categoryLabel={listing.categoryLabel}
+          />
+        </div>
       ))}
     </div>
   );
