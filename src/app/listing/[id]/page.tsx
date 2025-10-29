@@ -11,11 +11,16 @@ import { formatAvailability, WeekDay } from "@/lib/listing"
 import { getListingById, getListingsPage } from "@/lib/listings"
 
 interface ListingPageProps {
-  params: { id: string }
+  params?: Promise<{ id: string }>
 }
 
 export default async function ListingPage({ params }: ListingPageProps) {
-  const listingId = Number(params.id)
+  if (!params) {
+    notFound()
+  }
+
+  const { id } = await params
+  const listingId = Number(id)
 
   if (Number.isNaN(listingId)) {
     notFound()
