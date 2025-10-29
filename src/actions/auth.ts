@@ -9,7 +9,10 @@ import generateToken from "@/lib/generateToken";
 import { authenticated } from "@/controllers/auth";
 import { usersTable } from "@/lib/schema";
 
-export async function authenticate(_: null, formData: FormData): Promise<void> {
+export async function authenticate(
+  _: void | null,
+  formData: FormData
+): Promise<void> {
   const cookieStore = await cookies();
 
   const db = await getDbAsync();
@@ -57,7 +60,10 @@ export async function logout(): Promise<void> {
   redirect("/login");
 }
 
-export async function createUser(_: null, formData: FormData): Promise<void> {
+export async function createUser(
+  _: void | null,
+  formData: FormData
+): Promise<void> {
   const cookieStore = await cookies();
 
   const db = await getDbAsync();

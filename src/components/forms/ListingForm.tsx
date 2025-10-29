@@ -28,6 +28,24 @@ interface PresignResponse {
   uploads: PresignedUpload[];
 }
 
+type ErrorPayload = {
+  error?: string;
+  details?: string;
+};
+
+const parseErrorPayload = (payload: unknown): ErrorPayload => {
+  if (payload && typeof payload === "object") {
+    const record = payload as Record<string, unknown>;
+
+    return {
+      error: typeof record.error === "string" ? record.error : undefined,
+      details: typeof record.details === "string" ? record.details : undefined,
+    };
+  }
+
+  return {};
+};
+
 export default function ListingForm() {
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [uploadProgress, setUploadProgress] = useState<number>(0);
@@ -82,7 +100,9 @@ export default function ListingForm() {
       });
 
       if (!presignResponse.ok) {
-        const errorBody = await presignResponse.json().catch(() => ({}));
+        const errorBody = parseErrorPayload(
+          await presignResponse.json().catch(() => ({}))
+        );
         throw new Error(
           errorBody.error ??
             "Failed to request upload URLs. Please try again later."
@@ -134,7 +154,9 @@ export default function ListingForm() {
       });
 
       if (!createListingResponse.ok) {
-        const errorBody = await createListingResponse.json().catch(() => ({}));
+        const errorBody = parseErrorPayload(
+          await createListingResponse.json().catch(() => ({}))
+        );
         throw new Error(
           errorBody.error
             ? `${errorBody.error}${
