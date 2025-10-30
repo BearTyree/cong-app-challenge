@@ -32,11 +32,11 @@ export default function ProfileHeader({
         </Avatar>
 
         {/* Profile Info */}
-        <div className="flex-1">
-          <div className="flex items-center justify-between mb-2">
-            <h1 className="text-3xl font-bold text-gray-900">{username}</h1>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center justify-between mb-2 gap-4">
+            <h1 className="text-3xl font-bold text-gray-900 break-words overflow-wrap-anywhere min-w-0">{username}</h1>
             {isOwnProfile && (
-              <Link href={`/profile/${profileId}/edit`}>
+              <Link href={`/profile/${profileId}/edit`} className="flex-shrink-0">
                 <Button
                   className="bg-[#78A75A] hover:bg-[#638b4a] text-white"
                 >
@@ -46,7 +46,7 @@ export default function ProfileHeader({
             )}
           </div>
           {bio && (
-            <p className="text-gray-700 max-w-2xl">{bio}</p>
+            <p className="text-gray-700 max-w-2xl break-words overflow-wrap-anywhere">{bio}</p>
           )}
           {!bio && isOwnProfile && (
             <p className="text-gray-400 italic">Add a bio to tell others about yourself</p>
