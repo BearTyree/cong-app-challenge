@@ -34,9 +34,9 @@ export default function ImageCard({
             unoptimized={isRemoteImage(resolvedSrc)}
           />
         </AspectRatio>
-        <h1 className="text-left w-full text-lg hover:underline">{title}</h1>
-        <p className="text-left w-full text-sm text-gray-600">{condition}</p>
-        <p className="text-left w-full text-xs uppercase tracking-wide text-gray-500">{categoryLabel}</p>
+        <h1 className="text-left w-full text-lg hover:underline break-words overflow-wrap-anywhere">{title}</h1>
+        <p className="text-left w-full text-sm text-gray-600 break-words overflow-wrap-anywhere">{condition}</p>
+        <p className="text-left w-full text-xs uppercase tracking-wide text-gray-500 break-words overflow-wrap-anywhere">{categoryLabel}</p>
     </Link>
   );
 }
