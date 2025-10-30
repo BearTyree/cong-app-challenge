@@ -35,7 +35,7 @@ export function AppCarousel() {
       color: "#4F83F4",
     },
   ];
-  const plugin = useRef(Autoplay({ delay: 4000 }));
+  const plugin = useRef(Autoplay({ delay: 5000, stopOnInteraction: false }));
   return (
     <Carousel
       opts={{
