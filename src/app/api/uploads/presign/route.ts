@@ -40,9 +40,9 @@ const getFileExtension = (mime: string): string => {
 };
 
 export async function POST(request: NextRequest) {
-  const username = await authenticated();
+  const userEmail = await authenticated();
 
-  if (!username) {
+  if (!userEmail) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

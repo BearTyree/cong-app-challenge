@@ -2,7 +2,7 @@ import { cookies } from "next/headers";
 import { jwtVerify, type JWTPayload } from "jose";
 
 interface CustomJWTPayload extends JWTPayload {
-  username?: string;
+  email?: string;
 }
 
 export async function authenticated(): Promise<string | false> {
@@ -22,7 +22,7 @@ export async function authenticated(): Promise<string | false> {
 
   try {
     const { payload } = await jwtVerify<CustomJWTPayload>(token, secret);
-    return payload.username || false;
+    return payload.email || false;
   } catch (error) {
     console.error("JWT verification failed:", error);
     return false;

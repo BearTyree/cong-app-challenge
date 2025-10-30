@@ -1,7 +1,6 @@
 "use client";
 
-import { authenticate } from "@/actions/auth";
-
+import { authenticate, type AuthFormState } from "@/actions/auth";
 import {
   Card,
   CardContent,
@@ -14,7 +13,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 export default function Login() {
-  const [, action] = useActionState(authenticate, null);
+  const [state, action, pending] = useActionState<AuthFormState, FormData>(
+    authenticate,
+    null
+  );
+
   return (
     <Card className="w-full max-w-sm">
       <div className="flex flex-col items-center justify-center">
@@ -25,38 +28,51 @@ export default function Login() {
       </div>
 
       <CardContent>
-        <form action={action}>
-          <div className="flex flex-col gap-6">
-            <div className="grid gap-2">
-              <Label htmlFor="username">Username</Label>
-              <Input
-                id="username"
-                type="text"
-                name="username"
-                placeholder="Rex Ample"
-                required
-              />
-            </div>
-            <div className="grid gap-2">
-              <div className="flex items-center">
-                <Label htmlFor="password">Password</Label>
-                <a
-                  href="#"
-                  className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
-                >
-                  Forgot your password?
-                </a>
-              </div>
-              <Input id="password" name="password" type="password" required />
-            </div>
+        <form action={action} className="flex flex-col gap-6">
+          <div className="grid gap-2">
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              type="email"
+              name="email"
+              placeholder="you@example.com"
+              required
+              autoComplete="email"
+              defaultValue={state?.values?.email ?? ""}
+            />
           </div>
+          <div className="grid gap-2">
+            <div className="flex items-center">
+              <Label htmlFor="password">Password</Label>
+              <a
+                href="/contact"
+                className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
+              >
+                Forgot your password?
+              </a>
+            </div>
+            <Input
+              id="password"
+              name="password"
+              type="password"
+              required
+              autoComplete="current-password"
+              defaultValue=""
+            />
+          </div>
+          {state?.error && (
+            <p className="text-sm text-red-600" role="alert">
+              {state.error}
+            </p>
+          )}
           <Button
             type="submit"
-            className="bg-[#212121] hover:bg-[#303030] w-full cursor-pointer mt-4"
+            className="bg-[#212121] hover:bg-[#303030] w-full cursor-pointer mt-2"
+            disabled={pending}
           >
-            Login
+            {pending ? "Logging in..." : "Login"}
           </Button>
-          <div className="mt-4 text-center text-sm">
+          <div className="mt-2 text-center text-sm">
             Don&apos;t have an account?{" "}
             <a href="/signup" className="underline underline-offset-4">
               Sign up
