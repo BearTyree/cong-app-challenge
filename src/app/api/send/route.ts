@@ -18,7 +18,7 @@ export async function POST(request: Request, res: Response) {
   const { data, error } = await resend.emails.send({
     from: "onboarding@resend.dev",
     to: [listerEmail],
-    subject: "Thank you",
+    subject: "Trovable | Someone is interested in picking up your item!",
     html: await render(TrovableTemplate({ itemName, requesterEmail, listerEmail, profileId, })),
   });
 
