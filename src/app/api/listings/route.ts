@@ -5,6 +5,7 @@ import { authenticated } from "@/controllers/auth";
 import { getDbAsync } from "@/lib/drizzle";
 import { FORM_LIMITS } from "@/lib/listing";
 import { listingTable } from "@/lib/schema";
+import { getCurrentUserProfile } from "@/lib/auth-helpers";
 
 const createListingSchema = z.object({
   title: z.string().min(3).max(100),
@@ -45,6 +46,15 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  // Get the user's profile to set createdBy
+  const userProfile = await getCurrentUserProfile(userEmail);
+  if (!userProfile) {
+    return NextResponse.json(
+      { error: "User profile not found. Please contact support." },
+      { status: 500 }
+    );
+  }
+
   const db = await getDbAsync();
 
   try {
@@ -59,6 +69,7 @@ export async function POST(request: NextRequest) {
         result.data.pickupInstructions && result.data.pickupInstructions.length > 0
           ? result.data.pickupInstructions
           : null,
+      createdBy: userProfile.id,
     };
 
     const [insertedListing] = await db

@@ -41,18 +41,17 @@ export const listingSchema = z.object({
 
   category: z.enum(
     CATEGORIES.map(c => c.id) as [Category, ...Category[]]
-  ).describe("Please select a category"),
+  ).describe("Please select a category").optional(),
 
   condition: z.enum(
     CONDITIONS.map(c => c.value) as [Condition, ...Condition[]]
-  ).describe("Please select a condition"),
+  ).describe("Please select a condition").optional(),
 
   description: z.string()
     .min(20, "Description must be at least 20 characters")
     .max(1000, "Description must be less than 1000 characters"),
 
   images: z.array(z.instanceof(File))
-    .min(1, "At least one image is required")
     .max(FORM_LIMITS.maxImages, `Maximum ${FORM_LIMITS.maxImages} images allowed`)
     .refine(
       files => files.every(file => file.size <= FORM_LIMITS.maxFileSize),
@@ -61,7 +60,8 @@ export const listingSchema = z.object({
     .refine(
       files => files.every(file => FORM_LIMITS.acceptedImageTypes.includes(file.type)),
       "Only JPG, PNG, and WebP images are allowed"
-    ),
+    )
+    .optional(),
 
   pickupAddress: z.string()
     .min(10, "Please enter a valid pickup address"),

@@ -29,6 +29,13 @@
       "when": 1761825088458,
       "tag": "0003_nostalgic_darkhawk",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1761830485540,
+      "tag": "0004_military_purple_man",
+      "breakpoints": true
     }
   ]
 }

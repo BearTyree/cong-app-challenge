@@ -30,7 +30,9 @@ export const listingTable = sqliteTable("Listing", {
     .default(["/window.svg"]),
   pickupAddress: text("pickupAddress").notNull(),
   pickupInstructions: text("pickupInstructions"),
-  createdBy: integer("createdBy").references(() => profilesTable.id, {
-    onDelete: "cascade",
-  }),
+  createdBy: integer("createdBy")
+    .notNull()
+    .references(() => profilesTable.id, {
+      onDelete: "cascade",
+    }),
 });

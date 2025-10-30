@@ -1,6 +1,4 @@
 import { AppCarousel } from "@/components/appCarousel";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
 import ImageGrid from "@/components/imageGrid";
 import FilterBar from "@/components/listings/FilterBar";
 import Pagination from "@/components/listings/Pagination";
@@ -15,7 +13,7 @@ interface LandingProps {
   };
 }
 
-export default async function Landing({ searchParams }: LandingProps) {
+export default async function Dashboard({ searchParams }: LandingProps) {
   const currentPage = Number(searchParams?.page) || 1;
   const category = searchParams?.category;
   const sortBy = (searchParams?.sortBy as SortBy) || "id";
@@ -35,7 +33,7 @@ export default async function Landing({ searchParams }: LandingProps) {
   return (
     <div className="w-full h-full flex flex-col justify-center items-center mt-5">
       <AppCarousel />
-      <div className="my-2 flex flex-col justify-center items-center">
+{/*       <div className="my-2 flex flex-col justify-center items-center">
         <p className="text-4xl font-medium">
           A donation driven marketplace for communities
         </p>
@@ -45,10 +43,10 @@ export default async function Landing({ searchParams }: LandingProps) {
             Donate Now
           </Button>
         </Link>
-      </div>
+      </div> */}
 
       <div className="w-full">
-        <p className="w-full font-bold mb-4">Browse Available Items</p>
+        <p className="w-full font-bold mb-4 pt-8">Browse Available Items</p>
 
         <FilterBar />
 

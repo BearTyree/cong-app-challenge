@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import Image from "next/image";
 import FormField from "./FormField";
 import ImagePreview from "./ImagePreview";
 import {
@@ -56,8 +57,29 @@ import {
 import { autocomplete } from "@/lib/google";
 import { PlaceData } from "@googlemaps/google-maps-services-js";
 
-export default function ListingForm() {
+interface ListingFormProps {
+  mode?: "create" | "edit";
+  listingId?: number;
+  initialData?: {
+    title: string;
+    category: string;
+    condition: string;
+    description: string;
+    images: string[];
+    pickupAddress: string;
+    pickupInstructions: string | null;
+  };
+}
+
+export default function ListingForm({
+  mode = "create",
+  listingId,
+  initialData,
+}: ListingFormProps) {
   const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [existingImages, setExistingImages] = useState<string[]>(
+    initialData?.images ?? []
+  );
   const [uploadProgress, setUploadProgress] = useState<number>(0);
   const [serverError, setServerError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -73,8 +95,12 @@ export default function ListingForm() {
   } = useForm<ListingFormData>({
     resolver: zodResolver(listingSchema),
     defaultValues: {
-      pickupAddress: "",
-      pickupInstructions: "",
+      title: initialData?.title ?? "",
+      category: initialData?.category as ListingFormData["category"],
+      condition: initialData?.condition as ListingFormData["condition"],
+      description: initialData?.description ?? "",
+      pickupAddress: initialData?.pickupAddress ?? "",
+      pickupInstructions: initialData?.pickupInstructions ?? "",
     },
   });
 
@@ -83,63 +109,85 @@ export default function ListingForm() {
     setSuccessMessage(null);
     setUploadProgress(0);
 
-    if (!data.images?.length) {
+    // Validate that we have at least one image (new files OR existing images in edit mode)
+    const hasNewImages = data.images && data.images.length > 0;
+    const hasExistingImages = existingImages.length > 0;
+
+    if (!hasNewImages && !hasExistingImages) {
+      setServerError("Please add at least one image before submitting.");
+      return;
+    }
+
+    // In create mode, images are required
+    if (mode === "create" && !hasNewImages) {
       setServerError("Please add at least one image before submitting.");
       return;
     }
 
     try {
-      const presignResponse = await fetch("/api/uploads/presign", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          files: data.images.map((file, index) => ({
-            size: file.size,
-            type: file.type,
-            index,
-          })),
-        }),
-      });
+      let finalImageKeys: string[] = [...existingImages];
 
-      if (!presignResponse.ok) {
-        const errorBody = parseErrorPayload(
-          await presignResponse.json().catch(() => ({}))
-        );
-        throw new Error(
-          errorBody.error ??
-            "Failed to request upload URLs. Please try again later."
-        );
-      }
-
-      const presignData: PresignResponse = await presignResponse.json();
-
-      const orderedUploads = presignData.uploads.sort(
-        (a, b) => a.index - b.index
-      );
-
-      for (const [position, upload] of orderedUploads.entries()) {
-        const file = data.images[upload.index];
-        const uploadResult = await fetch(upload.uploadUrl, {
-          method: "PUT",
-          headers: upload.headers,
-          body: file,
+      // Only upload new images if any were selected
+      if (data.images && data.images.length > 0) {
+        const presignResponse = await fetch("/api/uploads/presign", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            files: data.images.map((file, index) => ({
+              size: file.size,
+              type: file.type,
+              index,
+            })),
+          }),
         });
 
-        if (!uploadResult.ok) {
+        if (!presignResponse.ok) {
+          const errorBody = parseErrorPayload(
+            await presignResponse.json().catch(() => ({}))
+          );
           throw new Error(
-            `Upload failed for image ${upload.index + 1}. Please retry.`
+            errorBody.error ??
+              "Failed to request upload URLs. Please try again later."
           );
         }
 
-        setUploadProgress(
-          Math.round(((position + 1) / orderedUploads.length) * 100)
+        const presignData: PresignResponse = await presignResponse.json();
+
+        const orderedUploads = presignData.uploads.sort(
+          (a, b) => a.index - b.index
         );
+
+        for (const [position, upload] of orderedUploads.entries()) {
+          const file = data.images[upload.index];
+          const uploadResult = await fetch(upload.uploadUrl, {
+            method: "PUT",
+            headers: upload.headers,
+            body: file,
+          });
+
+          if (!uploadResult.ok) {
+            throw new Error(
+              `Upload failed for image ${upload.index + 1}. Please retry.`
+            );
+          }
+
+          setUploadProgress(
+            Math.round(((position + 1) / orderedUploads.length) * 100)
+          );
+        }
+
+        // In edit mode, append new images to existing ones
+        const newImageKeys = orderedUploads.map((upload) => upload.key);
+        finalImageKeys = mode === "edit" ? [...existingImages, ...newImageKeys] : newImageKeys;
       }
 
-      const createListingResponse = await fetch("/api/listings", {
-        method: "POST",
+      const apiUrl = mode === "edit" ? `/api/listings/${listingId}` : "/api/listings";
+      const apiMethod = mode === "edit" ? "PUT" : "POST";
+
+      const saveListingResponse = await fetch(apiUrl, {
+        method: apiMethod,
         headers: {
           "Content-Type": "application/json",
         },
@@ -148,15 +196,15 @@ export default function ListingForm() {
           category: data.category,
           condition: data.condition,
           description: data.description,
-          images: orderedUploads.map((upload) => upload.key),
+          images: finalImageKeys,
           pickupAddress: data.pickupAddress,
           pickupInstructions: data.pickupInstructions ?? "",
         }),
       });
 
-      if (!createListingResponse.ok) {
+      if (!saveListingResponse.ok) {
         const errorBody = parseErrorPayload(
-          await createListingResponse.json().catch(() => ({}))
+          await saveListingResponse.json().catch(() => ({}))
         );
         throw new Error(
           errorBody.error
@@ -168,17 +216,22 @@ export default function ListingForm() {
       }
 
       const listingResult: { id: number } =
-        await createListingResponse.json();
+        await saveListingResponse.json();
 
-      setSuccessMessage("Listing created successfully.");
+      setSuccessMessage(
+        mode === "edit" ? "Listing updated successfully." : "Listing created successfully."
+      );
 
-      reset();
-      setImageFiles([]);
-      setValue("images", [], { shouldValidate: true });
+      if (mode === "create") {
+        reset();
+        setImageFiles([]);
+        setValue("images", [], { shouldValidate: true });
+      }
       setUploadProgress(0);
 
-      if (listingResult?.id) {
-        router.push(`/listing/${listingResult.id}`);
+      const targetId = mode === "edit" ? listingId : listingResult.id;
+      if (targetId) {
+        router.push(`/listing/${targetId}`);
       }
     } catch (error) {
       console.error("Listing submission failed", error);
@@ -213,8 +266,13 @@ export default function ListingForm() {
     setValue("images", newFiles, { shouldValidate: true });
   };
 
+  const removeExistingImage = (index: number) => {
+    const newExisting = existingImages.filter((_, i) => i !== index);
+    setExistingImages(newExisting);
+  };
+
   const [predictions, setPredictions] = useState<PlaceData[]>([]);
-  const [input, setInput] = useState("");
+  const [input, setInput] = useState(initialData?.pickupAddress ?? "");
 
   useEffect(() => {
     const fetchPredictions = async () => {
@@ -222,8 +280,9 @@ export default function ListingForm() {
       setPredictions(predictions as PlaceData[]);
     };
     fetchPredictions();
-    
-  }, [input]);
+    // Sync input state with form state
+    setValue("pickupAddress", input, { shouldValidate: true });
+  }, [input, setValue]);
 
   useEffect(() => {
     console.log(predictions);
@@ -299,13 +358,13 @@ export default function ListingForm() {
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Images</h2>
 
         <FormField
-          label="Upload Images"
+          label={mode === "edit" ? "Upload New Images (optional)" : "Upload Images"}
           error={
             errors.images
               ? { message: errors.images.message, type: "required" }
             : undefined
           }
-          required
+          required={mode === "create"}
         >
           <input
             type="file"
@@ -317,6 +376,9 @@ export default function ListingForm() {
           <p className="text-xs text-gray-500 mt-1">
             JPG, PNG or WebP. Max {FORM_LIMITS.maxImages} images,{" "}
             {FORM_LIMITS.maxFileSize / 1024 / 1024}MB each
+            {mode === "edit" && existingImages.length > 0 && (
+              <> • You can keep existing images or upload new ones</>
+            )}
           </p>
         </FormField>
 
@@ -332,13 +394,67 @@ export default function ListingForm() {
           <p className="text-sm text-green-600 mt-2">{successMessage}</p>
         )}
 
-        <div className="mt-4">
-          <ImagePreview
-            files={imageFiles}
-            onRemove={removeImage}
-            maxImages={FORM_LIMITS.maxImages}
-          />
-        </div>
+        {/* Display existing images in edit mode */}
+        {mode === "edit" && existingImages.length > 0 && (
+          <div className="mt-4">
+            <h3 className="text-sm font-medium text-gray-700 mb-2">Current Images</h3>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
+              {existingImages.map((imageUrl, index) => (
+                <div key={index} className="relative group">
+                  <div className="relative aspect-square rounded-lg overflow-hidden bg-gray-100">
+                    <Image
+                      src={imageUrl}
+                      alt={`Existing ${index + 1}`}
+                      fill
+                      className="object-cover"
+                      unoptimized={imageUrl.startsWith("http")}
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => removeExistingImage(index)}
+                    className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                    aria-label="Remove image"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Display new image files */}
+        {imageFiles.length > 0 && (
+          <div className="mt-4">
+            {mode === "edit" && <h3 className="text-sm font-medium text-gray-700 mb-2">New Images</h3>}
+            <ImagePreview
+              files={imageFiles}
+              onRemove={removeImage}
+              maxImages={FORM_LIMITS.maxImages}
+            />
+          </div>
+        )}
+
+        {/* Show empty state only if no existing images and no new files */}
+        {mode === "edit" && existingImages.length === 0 && imageFiles.length === 0 && (
+          <div className="mt-4 border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+            <p className="text-gray-500 text-sm">No images selected</p>
+            <p className="text-gray-400 text-xs mt-1">Maximum {FORM_LIMITS.maxImages} images</p>
+          </div>
+        )}
+
+        {mode === "create" && imageFiles.length === 0 && (
+          <div className="mt-4">
+            <ImagePreview
+              files={imageFiles}
+              onRemove={removeImage}
+              maxImages={FORM_LIMITS.maxImages}
+            />
+          </div>
+        )}
       </div>
 
       <div className="bg-white rounded-lg border border-gray-200 p-6">
@@ -354,7 +470,6 @@ export default function ListingForm() {
           >
             <Command>
               <CommandInput
-                {...register("pickupAddress")}
                 className="w-full px-3 py-2"
                 placeholder="123 Main Street, City"
                 value={input}
@@ -398,7 +513,13 @@ export default function ListingForm() {
           disabled={isSubmitting}
           className="px-6 py-2 bg-[#78A75A] text-white rounded-lg hover:bg-[#638b4a] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {isSubmitting ? "Submitting..." : "Create Listing"}
+          {isSubmitting
+            ? mode === "edit"
+              ? "Updating..."
+              : "Submitting..."
+            : mode === "edit"
+              ? "Update Listing"
+              : "Create Listing"}
         </button>
       </div>
     </form>

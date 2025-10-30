@@ -1,6 +1,7 @@
 import { spawnSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
+import { createHash } from "node:crypto";
 
 type CategorySeed = {
   id: string;
@@ -161,10 +162,41 @@ const sqlValue = (value: string | null) =>
 
 const serializeJson = (value: unknown) => sqlValue(JSON.stringify(value));
 
+const hashPassword = (password: string, salt: string): string => {
+  const hash = createHash("sha256");
+  hash.update(password + salt);
+  return hash.digest("hex");
+};
+
 const buildSqlScript = () => {
+  // Create test user credentials
+  const testEmail = "test@gmail.com";
+  const testPassword = "testtest";
+  const testUsername = "test";
+  const testSalt = "0123456789abcdef0123456789abcdef"; // Fixed salt for consistency
+  const testPasswordHash = hashPassword(testPassword, testSalt);
+
   const statements = [
     "PRAGMA foreign_keys = OFF;",
     "BEGIN TRANSACTION;",
+    // Create User table
+    `CREATE TABLE IF NOT EXISTS "User" (
+      "id" integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+      "email" text NOT NULL,
+      "passwordHash" text NOT NULL,
+      "passwordSalt" text NOT NULL,
+      UNIQUE("email")
+    );`,
+    // Create Profile table
+    `CREATE TABLE IF NOT EXISTS "Profile" (
+      "id" integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+      "userId" integer NOT NULL,
+      "username" text NOT NULL,
+      "bio" text,
+      "avatar" text,
+      FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE
+    );`,
+    // Create Listing table
     `CREATE TABLE IF NOT EXISTS "Listing" (
       "id" integer PRIMARY KEY AUTOINCREMENT NOT NULL,
       "title" text NOT NULL,
@@ -174,9 +206,19 @@ const buildSqlScript = () => {
       "images" text DEFAULT '["/window.svg"]' NOT NULL,
       "pickupAddress" text NOT NULL,
       "pickupInstructions" text,
-      "createdBy" integer
+      "createdBy" integer NOT NULL,
+      FOREIGN KEY ("createdBy") REFERENCES "Profile"("id") ON DELETE CASCADE
     );`,
+    // Clear existing data
     'DELETE FROM "Listing";',
+    'DELETE FROM "Profile";',
+    'DELETE FROM "User";',
+    // Insert test user
+    `INSERT INTO "User" ("email", "passwordHash", "passwordSalt")
+     VALUES (${sqlValue(testEmail)}, ${sqlValue(testPasswordHash)}, ${sqlValue(testSalt)});`,
+    // Insert test profile (userId will be 1)
+    `INSERT INTO "Profile" ("userId", "username", "bio", "avatar")
+     VALUES (1, ${sqlValue(testUsername)}, ${sqlValue("Test user account for seeded listings")}, NULL);`,
   ];
 
   for (let index = 0; index < 100; index++) {
@@ -198,6 +240,7 @@ const buildSqlScript = () => {
       serializeJson(images),
       sqlValue(pickupAddress),
       sqlValue(pickupInstructions),
+      "1", // createdBy references the test profile (id=1)
     ].join(", ");
 
     statements.push(
@@ -208,7 +251,8 @@ const buildSqlScript = () => {
         "description",
         "images",
         "pickupAddress",
-        "pickupInstructions"
+        "pickupInstructions",
+        "createdBy"
       ) VALUES (${insertValues});`
     );
   }

@@ -3,7 +3,7 @@ import { and, asc, desc, eq, like, notInArray, or, sql } from "drizzle-orm";
 import { getDbAsync } from "@/lib/drizzle";
 import { getPublicObjectUrl } from "@/lib/r2";
 import { getCategoryLabel, getConditionLabel } from "@/lib/listing";
-import { listingTable } from "@/lib/schema";
+import { listingTable, profilesTable } from "@/lib/schema";
 
 type ListingRow = typeof listingTable.$inferSelect;
 export interface ListingCardData {
@@ -21,6 +21,8 @@ export interface ListingDetail extends ListingCardData {
   description: string;
   pickupInstructions: string | null;
   images: string[];
+  createdByProfileId: number;
+  createdByUsername: string;
 }
 
 export interface ListingFilters {
@@ -28,6 +30,7 @@ export interface ListingFilters {
   category?: string;
   tags?: string[];
   excludeIds?: number[];
+  createdBy?: number;
 }
 
 export interface PaginatedListings {
@@ -129,7 +132,7 @@ const mapRowToCard = (row: ListingRow): ListingCardData => {
   };
 };
 
-const mapRowToDetail = (row: ListingRow): ListingDetail => {
+const mapRowToDetail = (row: ListingRow): Omit<ListingDetail, "createdByProfileId" | "createdByUsername"> => {
   const resolved = resolveImages(row);
 
   return {
@@ -161,12 +164,14 @@ const buildFilters = (filters?: ListingFilters) => {
     conditions.push(eq(listingTable.category, filters.category));
   }
 
+  if (filters.createdBy !== undefined) {
+    conditions.push(eq(listingTable.createdBy, filters.createdBy));
+  }
+
   if (filters.excludeIds && filters.excludeIds.length > 0) {
     conditions.push(notInArray(listingTable.id, filters.excludeIds));
   }
 
-  // Placeholder for future tag filtering once tags column exists.
-  // if (filters.tags?.length) { ... }
 
   if (conditions.length === 0) {
     return undefined;
@@ -233,15 +238,26 @@ export async function getListingsPage(
 export async function getListingById(id: number): Promise<ListingDetail | null> {
   const db = await getDbAsync();
 
-  const row = await db
-    .select()
+  const result = await db
+    .select({
+      listing: listingTable,
+      profileId: profilesTable.id,
+      profileUsername: profilesTable.username,
+    })
     .from(listingTable)
+    .innerJoin(profilesTable, eq(listingTable.createdBy, profilesTable.id))
     .where(eq(listingTable.id, id))
     .get();
 
-  if (!row) {
+  if (!result) {
     return null;
   }
 
-  return mapRowToDetail(row);
+  const detail = mapRowToDetail(result.listing);
+
+  return {
+    ...detail,
+    createdByProfileId: result.profileId,
+    createdByUsername: result.profileUsername,
+  };
 }
