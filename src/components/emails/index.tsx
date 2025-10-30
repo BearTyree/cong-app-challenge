@@ -36,9 +36,9 @@ export default function ItemRequestEmail({
         <Container style={container}>
           <Section style={logoSection}>
             <Img
-              src="https://trovable.org/logo.svg"
+              src="https://hc-cdn.hel1.your-objectstorage.com/s/v3/e2fffe5b898f6aeb10b144628c9d95daba1307a9_logo.png"
               alt="Trovable"
-              width="120"
+              width="160"
               height="40"
               style={logo}
             />
