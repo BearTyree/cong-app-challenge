@@ -15,6 +15,13 @@
       "when": 1761616783167,
       "tag": "0001_add_listing_images",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1761803721485,
+      "tag": "0002_lyrical_toxin",
+      "breakpoints": true
     }
   ]
 }

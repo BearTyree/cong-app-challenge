@@ -119,43 +119,44 @@ const homeComponents: { title: string; href: string; description?: string }[] =
   ];
 
 export default async function Header() {
+  const isAuthenticated = await authenticated();
+
   return (
     <div className="flex flex-col min-w-screen fixed top-0 z-50">
       <NavigationMenu className="min-w-full justify-between py-2 px-2 box-border right-0 border-b z-10 bg-white">
         <div className="relative w-28 h-10">
           <Link href="/">
-            <Image src="/logo.svg" alt="logo" fill></Image>
+            <Image src="/logo.svg" alt="logo" fill />
           </Link>
         </div>
-        {(await authenticated()) && <SearchBar></SearchBar>}
+        {isAuthenticated && <SearchBar />}
         <NavigationMenuList className="flex justify-end w-full">
-          <NavigationMenuItem>
-            <NavigationMenuLink
-              asChild
-              className="bg-[#78A75A] rounded-sm cursor-pointer hover:bg-[#638b4a] active:bg-[#638b4a] focus:outline-none focus:bg-[#638b4a]"
-            >
-              <Link
-                href="/listing/new"
-                className="flex flex-row items-center px-3 py-2"
+          {isAuthenticated && (
+            <NavigationMenuItem>
+              <NavigationMenuLink
+                asChild
+                className="bg-[#78A75A] rounded-sm cursor-pointer hover:bg-[#638b4a] active:bg-[#638b4a] focus:outline-none focus:bg-[#638b4a]"
               >
-                <Plus
-                  color="white"
-                  size={16}
-                  strokeWidth={3}
-                  className="mr-1"
-                />
-                <h1 className="text-white text-sm">New Listing</h1>
-              </Link>
-            </NavigationMenuLink>
-          </NavigationMenuItem>
-          {(await authenticated()) ? (
-            <>
-              <NavigationMenuItem>
+                <Link
+                  href="/listing/new"
+                  className="flex flex-row items-center px-3 py-2"
+                >
+                  <Plus color="white" size={16} strokeWidth={3} className="mr-1" />
+                  <span className="text-white text-sm">New Listing</span>
+                </Link>
+              </NavigationMenuLink>
+            </NavigationMenuItem>
+          )}
+          {isAuthenticated ? (
+            <NavigationMenuItem>
+              <form action={logout}>
                 <NavigationMenuLink asChild>
-                  <button onClick={logout}>Logout</button>
+                  <button type="submit" className="px-4 py-2">
+                    Logout
+                  </button>
                 </NavigationMenuLink>
-              </NavigationMenuItem>
-            </>
+              </form>
+            </NavigationMenuItem>
           ) : (
             <>
               <NavigationMenuItem>
@@ -176,7 +177,7 @@ export default async function Header() {
           )}
         </NavigationMenuList>
       </NavigationMenu>
-      {(await authenticated()) && (
+      {isAuthenticated && (
         <NavigationMenu
           viewport={false}
           className="p-1 bg-white min-w-full border-b"

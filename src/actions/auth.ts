@@ -7,46 +7,65 @@ import { getDbAsync } from "@/lib/drizzle";
 import hash from "@/lib/hash";
 import generateToken from "@/lib/generateToken";
 import { authenticated } from "@/controllers/auth";
-import { usersTable } from "@/lib/schema";
+import { profilesTable, usersTable } from "@/lib/schema";
+
+export type AuthFormState =
+  | {
+      error?: string;
+      values?: {
+        email?: string;
+        username?: string;
+      };
+    }
+  | null;
+
+const oneWeek = 60 * 60 * 24 * 7;
+
+const cookieConfig = {
+  name: "token",
+  httpOnly: true,
+  sameSite: "strict" as const,
+  path: "/",
+  maxAge: oneWeek,
+};
+
+const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export async function authenticate(
-  _: void | null,
+  _state: AuthFormState,
   formData: FormData
-): Promise<void> {
+): Promise<AuthFormState> {
   const cookieStore = await cookies();
-
   const db = await getDbAsync();
 
-  const username = formData.get("username") as string;
-  const password = formData.get("password") as string;
+  const email = String(formData.get("email") ?? "").trim();
+  const password = String(formData.get("password") ?? "");
 
-  if (!username || !password) {
-    return;
+  if (!email || !password) {
+    return { error: "Email and password are required.", values: { email } };
+  }
+
+  if (!emailPattern.test(email)) {
+    return { error: "Enter a valid email address.", values: { email } };
   }
 
   const user = await db.query.usersTable.findFirst({
-    where: (users, { eq }) => eq(users.username, username),
+    where: (users, { eq }) => eq(users.email, email),
   });
 
   if (!user) {
-    return;
+    return { error: "No account found for that email.", values: { email } };
   }
 
-  const salt = user.passwordSalt;
-
-  const passwordHash = await hash(password + salt);
+  const passwordHash = await hash(password + user.passwordSalt);
 
   if (passwordHash !== user.passwordHash) {
-    return;
+    return { error: "Incorrect password. Please try again.", values: { email } };
   }
 
   cookieStore.set({
-    name: "token",
-    value: await generateToken(username),
-    httpOnly: true,
-    sameSite: "strict",
-    maxAge: 60 * 60 * 24 * 2, // 2 days
-    path: "/",
+    ...cookieConfig,
+    value: await generateToken(email),
   });
 
   redirect("/");
@@ -54,68 +73,105 @@ export async function authenticate(
 
 export async function logout(): Promise<void> {
   const cookieStore = await cookies();
-
   cookieStore.delete("token");
-
   redirect("/login");
 }
 
 export async function createUser(
-  _: void | null,
+  _state: AuthFormState,
   formData: FormData
-): Promise<void> {
-  const cookieStore = await cookies();
-
+): Promise<AuthFormState> {
   const db = await getDbAsync();
 
-  const username = formData.get("username") as string;
-  const password = formData.get("password") as string;
+  const email = String(formData.get("email") ?? "").trim();
+  const username = String(formData.get("username") ?? "").trim();
+  const password = String(formData.get("password") ?? "");
+  const confirmPassword = String(formData.get("confirmPassword") ?? "");
 
-  console.log(username, password);
-
-  if (!username || !password) {
-    return;
+  if (!email || !username || !password || !confirmPassword) {
+    return {
+      error: "All fields are required.",
+      values: { email, username },
+    };
   }
 
-  const arrayBuffer = new Uint8Array(16);
-  crypto.getRandomValues(arrayBuffer);
-  const salt = Array.from(arrayBuffer, (byte) =>
-    byte.toString(16).padStart(2, "0")
-  ).join("");
+  if (!emailPattern.test(email)) {
+    return { error: "Enter a valid email address.", values: { email, username } };
+  }
 
+  if (username.length < 3) {
+    return {
+      error: "Username must be at least 3 characters long.",
+      values: { email, username },
+    };
+  }
+
+  if (password.length < 8) {
+    return {
+      error: "Password must be at least 8 characters long.",
+      values: { email, username },
+    };
+  }
+
+  if (password !== confirmPassword) {
+    return { error: "Passwords do not match.", values: { email, username } };
+  }
+
+  const existingUser = await db.query.usersTable.findFirst({
+    where: (users, { eq }) => eq(users.email, email),
+  });
+
+  if (existingUser) {
+    return {
+      error: "An account with that email already exists.",
+      values: { email, username },
+    };
+  }
+
+  const saltBytes = new Uint8Array(16);
+  crypto.getRandomValues(saltBytes);
+  const salt = Array.from(saltBytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
   const passwordHash = await hash(password + salt);
 
-  try {
-    await db.insert(usersTable).values({
-      username,
+  const [createdUser] = await db
+    .insert(usersTable)
+    .values({
+      email,
       passwordHash,
       passwordSalt: salt,
-    });
+    })
+    .returning({ id: usersTable.id });
 
-    cookieStore.set({
-      name: "token",
-      value: await generateToken(username),
-      httpOnly: true,
-      sameSite: "strict",
-      maxAge: 60 * 60 * 24 * 2, // 2 days
-      path: "/",
-    });
-  } catch (error) {
-    console.log(error);
-    return;
+  const userId =
+    createdUser?.id ??
+    (await db.query.usersTable.findFirst({
+      where: (users, { eq }) => eq(users.email, email),
+      columns: { id: true },
+    }))?.id;
+
+  if (!userId) {
+    throw new Error("Failed to create user account.");
   }
-  redirect("/");
+
+  await db.insert(profilesTable).values({
+    userId,
+    username,
+  });
+
+  redirect("/login");
 }
 
 export async function checkToken(): Promise<void> {
   const cookieStore = await cookies();
+  const email = await authenticated();
 
-  const username = await authenticated();
-
-  if (!username) {
+  if (!email) {
     cookieStore.delete("token");
     return;
   }
 
-  cookieStore.set("token", await generateToken(username));
+  cookieStore.set({
+    ...cookieConfig,
+    value: await generateToken(email),
+  });
 }
