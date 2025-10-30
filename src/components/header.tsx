@@ -15,7 +15,7 @@ import { SearchBar } from "@/components/searchBar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getCurrentUserProfile } from "@/lib/auth-helpers";
 
-const peopleComponents: {
+const mensComponents: {
   title: string;
   href: string;
   description?: string;
@@ -48,6 +48,80 @@ const peopleComponents: {
   {
     title: "Hygine",
     href: "/search?query=mens+hygine",
+    description: "All in original packaging",
+  },
+];
+
+const womensComponents: {
+  title: string;
+  href: string;
+  description?: string;
+}[] = [
+  {
+    title: "Shoes",
+    href: "/search?query=womens+shoes",
+    description: "New and Vintage Sneakers",
+  },
+  {
+    title: "Clothing",
+    href: "/search?query=womens+clothing",
+    description: "Latest styles, all gently used",
+  },
+  {
+    title: "Accessories",
+    href: "/search?query=womens+accessories",
+    description: "Spice up your outfits",
+  },
+  {
+    title: "Athletic Clothing",
+    href: "/search?query=womens+athletic+clothing",
+    description: "Wide selection for all athletes",
+  },
+  {
+    title: "Athletic Equipment",
+    href: "/search?query=womens+athletic+equipment",
+    description: "New paddles and balls available",
+  },
+  {
+    title: "Hygine",
+    href: "/search?query=womens+hygine",
+    description: "All in original packaging",
+  },
+];
+
+const childrensComponents: {
+  title: string;
+  href: string;
+  description?: string;
+}[] = [
+  {
+    title: "Shoes",
+    href: "/search?query=mens+shoes",
+    description: "New and Vintage Sneakers",
+  },
+  {
+    title: "Clothing",
+    href: "/search?query=childrens+clothing",
+    description: "Latest styles, all gently used",
+  },
+  {
+    title: "Accessories",
+    href: "/search?query=childrens+accessories",
+    description: "Spice up your outfits",
+  },
+  {
+    title: "Athletic Clothing",
+    href: "/search?query=childrens+athletic+clothing",
+    description: "Wide selection for all athletes",
+  },
+  {
+    title: "Athletic Equipment",
+    href: "/search?query=childrens+athletic+equipment",
+    description: "New paddles and balls available",
+  },
+  {
+    title: "Hygine",
+    href: "/search?query=childrens+hygine",
     description: "All in original packaging",
   },
 ];
@@ -208,7 +282,7 @@ export default async function Header() {
               <NavigationMenuTrigger>Men&apos;s</NavigationMenuTrigger>
               <NavigationMenuContent>
                 <ul className="grid w-[400px] gap-2 md:w-[500px] md:grid-cols-2 lg:w-[600px]">
-                  {peopleComponents.map((component) => (
+                  {mensComponents.map((component) => (
                     <ListItem
                       key={component.title}
                       title={component.title}
@@ -224,7 +298,7 @@ export default async function Header() {
               <NavigationMenuTrigger>Women&apos;s</NavigationMenuTrigger>
               <NavigationMenuContent>
                 <ul className="grid w-[400px] gap-2 md:w-[500px] md:grid-cols-2 lg:w-[600px]">
-                  {peopleComponents.map((component) => (
+                  {womensComponents.map((component) => (
                     <ListItem
                       key={component.title}
                       title={component.title}
@@ -240,7 +314,7 @@ export default async function Header() {
               <NavigationMenuTrigger>Children&apos;s</NavigationMenuTrigger>
               <NavigationMenuContent>
                 <ul className="grid w-[400px] gap-2 md:w-[500px] md:grid-cols-2 lg:w-[600px]">
-                  {peopleComponents.map((component) => (
+                  {childrensComponents.map((component) => (
                     <ListItem
                       key={component.title}
                       title={component.title}

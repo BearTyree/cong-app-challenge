@@ -29,12 +29,14 @@ export default function ItemRequestEmail({
   return (
     <Html>
       <Head />
-      <Preview>{requesterEmail} wants to pick up your item: {itemName}</Preview>
+      <Preview>
+        {requesterEmail} wants to pick up your item: {itemName}
+      </Preview>
       <Body style={main}>
         <Container style={container}>
           <Section style={logoSection}>
             <Img
-              src="https://trovable.org/logo.svg"
+              src="/logo.svg"
               alt="Trovable"
               width="120"
               height="40"
@@ -44,11 +46,14 @@ export default function ItemRequestEmail({
 
           <Section style={content}>
             <Text style={greeting}>
-              {listerEmail}! <span style={emailHighlight}>{requesterEmail}</span> has requested to pick up your item, <strong>{itemName}</strong>!
+              {listerEmail}!{" "}
+              <span style={emailHighlight}>{requesterEmail}</span> has requested
+              to pick up your item, <strong>{itemName}</strong>!
             </Text>
 
             <Text style={instructionText}>
-              For communication please contact <span style={emailHighlight}>{requesterEmail}</span>
+              For communication please contact{" "}
+              <span style={emailHighlight}>{requesterEmail}</span>
             </Text>
 
             <Text style={reminderText}>
