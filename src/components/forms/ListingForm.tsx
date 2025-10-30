@@ -3,6 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 import FormField from "./FormField";
 import ImagePreview from "./ImagePreview";
 import {
@@ -45,6 +46,17 @@ const parseErrorPayload = (payload: unknown): ErrorPayload => {
 
   return {};
 };
+
+import {
+  Command,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+
+import { autocomplete } from "@/lib/google";
+import { PlaceData } from "@googlemaps/google-maps-services-js";
 
 export default function ListingForm() {
   const [imageFiles, setImageFiles] = useState<File[]>([]);
@@ -216,6 +228,22 @@ export default function ListingForm() {
     setValue("images", newFiles, { shouldValidate: true });
   };
 
+  const [predictions, setPredictions] = useState<PlaceData[]>([]);
+  const [input, setInput] = useState("");
+
+  useEffect(() => {
+    const fetchPredictions = async () => {
+      const predictions = await autocomplete(input);
+      setPredictions(predictions as PlaceData[]);
+    };
+    fetchPredictions();
+    
+  }, [input]);
+
+  useEffect(() => {
+    console.log(predictions);
+  }, [predictions])
+
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       <div className="bg-white rounded-lg border border-gray-200 p-6">
@@ -339,12 +367,24 @@ export default function ListingForm() {
             error={errors.pickupAddress}
             required
           >
-            <input
-              {...register("pickupAddress")}
-              type="text"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#9bc27d] focus:border-[#78A75A]"
-              placeholder="123 Main Street, City"
-            />
+            <Command>
+              <CommandInput
+                {...register("pickupAddress")}
+                className="w-full px-3 py-2"
+                placeholder="123 Main Street, City"
+                value={input}
+                onValueChange={setInput}
+              />
+              <CommandList>
+                <CommandGroup>
+                  {predictions.map((prediction) => (
+                    <CommandItem key={prediction.place_id} className="cursor-pointer" onSelect={()=>setInput(prediction.formatted_address)}>
+                      {prediction.formatted_address}
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              </CommandList>
+            </Command>
           </FormField>
 
           <FormField
