@@ -167,19 +167,18 @@ export default async function Header() {
             </Link>
           </div>
         )}
-        <div className="pr-4">
           {isAuthenticated ? (
             <NavigationMenuItem>
               <form action={logout}>
                 <NavigationMenuLink asChild>
-                  <button type="submit" className="px-4 py-2 border-2">
+                  <button type="submit" className="px-4 py-2 border-2 cursor-pointer">
                     Logout
                   </button>
                 </NavigationMenuLink>
               </form>
             </NavigationMenuItem>
           ) : (
-            <>
+            <div className="flex gap-1">
               <NavigationMenuItem>
                 <NavigationMenuLink asChild>
                   <Link href="/login" className="px-4 py-2">
@@ -194,9 +193,8 @@ export default async function Header() {
                   </Link>
                 </NavigationMenuLink>
               </NavigationMenuItem>
-            </>
+            </div>
           )}
-          </div>
         </NavigationMenuList>
         
       </NavigationMenu>
