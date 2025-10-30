@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import type { SendEmailRequest, SendEmailResponse } from "@/types/api";
 
 interface RequestButtonProps {
   listingId: number;
@@ -17,15 +18,17 @@ export default function RequestButton({ listingId }: RequestButtonProps) {
     setError(null);
 
     try {
-      const response = await fetch("/api/resend", {
+      const requestBody: SendEmailRequest = { listingId };
+
+      const response = await fetch("/api/send", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ listingId }),
+        body: JSON.stringify(requestBody),
       });
 
-      const data = await response.json();
+      const data: SendEmailResponse = await response.json();
 
       if (!response.ok) {
         throw new Error(data.error || "Failed to send request");
