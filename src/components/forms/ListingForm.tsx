@@ -398,71 +398,7 @@ export default function ListingForm() {
               placeholder="e.g., Please text 30 minutes before arrival"
             />
           </FormField>
-
-          <FormField
-            label="Available Days"
-            error={
-              errors.availabilityDays
-                ? { message: errors.availabilityDays.message, type: "required" }
-                : undefined
-            }
-            required
-          >
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-              {WEEKDAYS.map((day) => (
-                <label key={day.value} className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    value={day.value}
-                    checked={selectedDays?.includes(day.value)}
-                    onChange={(e) => {
-                      const value = e.target.value as WeekDay;
-                      if (e.target.checked) {
-                        setValue(
-                          "availabilityDays",
-                          [...(selectedDays || []), value],
-                          { shouldValidate: true }
-                        );
-                      } else {
-                        setValue(
-                          "availabilityDays",
-                          selectedDays?.filter((d) => d !== value) || [],
-                          { shouldValidate: true }
-                        );
-                      }
-                    }}
-                    className="rounded border-gray-300 text-[#78A75A] focus:ring-[#9bc27d]"
-                  />
-                  <span className="text-sm text-gray-700">{day.label}</span>
-                </label>
-              ))}
-            </div>
-          </FormField>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <FormField
-              label="Pickup Start Time"
-              error={errors.availabilityTimeStart}
-              required
-            >
-              <input
-                {...register("availabilityTimeStart")}
-                type="time"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#9bc27d] focus:border-[#78A75A]"
-              />
-            </FormField>
-            <FormField
-              label="Pickup End Time"
-              error={errors.availabilityTimeEnd}
-              required
-            >
-              <input
-                {...register("availabilityTimeEnd")}
-                type="time"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#9bc27d] focus:border-[#78A75A]"
-              />
-            </FormField>
-          </div>
+          
         </div>
       </div>
 
