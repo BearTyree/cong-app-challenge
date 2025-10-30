@@ -3,17 +3,9 @@ import { z } from "zod";
 
 import { authenticated } from "@/controllers/auth";
 import { getDbAsync } from "@/lib/drizzle";
-import { FORM_LIMITS, WEEKDAYS } from "@/lib/listing";
+import { FORM_LIMITS } from "@/lib/listing";
 import { listingTable } from "@/lib/schema";
-
-const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
-
-type WeekdayValue = (typeof WEEKDAYS)[number]["value"];
-const weekdayValues = WEEKDAYS.map((day) => day.value) as [
-  WeekdayValue,
-  ...WeekdayValue[]
-];
-const availabilityDayEnum = z.enum(weekdayValues);
+import { getCurrentUserProfile } from "@/lib/auth-helpers";
 
 const createListingSchema = z.object({
   title: z.string().min(3).max(100),
@@ -30,18 +22,6 @@ const createListingSchema = z.object({
     .max(500)
     .optional()
     .or(z.literal("").optional()),
-  availabilityDays: z.array(availabilityDayEnum).min(1),
-  availabilityTimeStart: z.string().regex(timeRegex),
-  availabilityTimeEnd: z.string().regex(timeRegex),
-}).refine((data) => {
-  const [startHour, startMinute] = data.availabilityTimeStart.split(":").map(Number);
-  const [endHour, endMinute] = data.availabilityTimeEnd.split(":").map(Number);
-  const startMinutes = startHour * 60 + startMinute;
-  const endMinutes = endHour * 60 + endMinute;
-  return endMinutes > startMinutes;
-}, {
-  message: "End time must be after start time",
-  path: ["availabilityTimeEnd"],
 });
 
 export async function POST(request: NextRequest) {
@@ -66,6 +46,15 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  // Get the user's profile to set createdBy
+  const userProfile = await getCurrentUserProfile(userEmail);
+  if (!userProfile) {
+    return NextResponse.json(
+      { error: "User profile not found. Please contact support." },
+      { status: 500 }
+    );
+  }
+
   const db = await getDbAsync();
 
   try {
@@ -80,9 +69,7 @@ export async function POST(request: NextRequest) {
         result.data.pickupInstructions && result.data.pickupInstructions.length > 0
           ? result.data.pickupInstructions
           : null,
-      availabilityDays: result.data.availabilityDays,
-      availabilityTimeStart: result.data.availabilityTimeStart,
-      availabilityTimeEnd: result.data.availabilityTimeEnd,
+      createdBy: userProfile.id,
     };
 
     const [insertedListing] = await db

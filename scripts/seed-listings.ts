@@ -1,6 +1,7 @@
 import { spawnSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
+import { createHash } from "node:crypto";
 
 type CategorySeed = {
   id: string;
@@ -51,16 +52,6 @@ const CATEGORY_POOL: CategorySeed[] = [
 ];
 
 const CONDITIONS = ["new", "like-new", "gently-used", "used", "well-worn"] as const;
-
-const WEEKDAYS = [
-  "monday",
-  "tuesday",
-  "wednesday",
-  "thursday",
-  "friday",
-  "saturday",
-  "sunday",
-] as const;
 
 const PLACEHOLDER_IMAGES = [
   "/banner_school.jpg",
@@ -150,19 +141,6 @@ const pickSome = <T,>(items: readonly T[], count: number): T[] => {
   return selection;
 };
 
-const randomTimeRange = () => {
-  const startHour = randomInt(9, 17);
-  const startMinute = pickOne(["00", "30"]);
-  const spanHours = randomInt(1, 4);
-  const endHour = Math.min(startHour + spanHours, 21);
-  const endMinute = startMinute === "00" ? pickOne(["00", "30"]) : "30";
-
-  return {
-    start: `${String(startHour).padStart(2, "0")}:${startMinute}`,
-    end: `${String(endHour).padStart(2, "0")}:${endMinute}`,
-  };
-};
-
 const generateTitle = (itemName: string) => `${pickOne(ADJECTIVES)} ${itemName}`;
 
 const generateDescription = (title: string) => {
@@ -184,24 +162,63 @@ const sqlValue = (value: string | null) =>
 
 const serializeJson = (value: unknown) => sqlValue(JSON.stringify(value));
 
+const hashPassword = (password: string, salt: string): string => {
+  const hash = createHash("sha256");
+  hash.update(password + salt);
+  return hash.digest("hex");
+};
+
 const buildSqlScript = () => {
+  // Create test user credentials
+  const testEmail = "test@gmail.com";
+  const testPassword = "testtest";
+  const testUsername = "test";
+  const testSalt = "0123456789abcdef0123456789abcdef"; // Fixed salt for consistency
+  const testPasswordHash = hashPassword(testPassword, testSalt);
+
   const statements = [
     "PRAGMA foreign_keys = OFF;",
     "BEGIN TRANSACTION;",
+    // Create User table
+    `CREATE TABLE IF NOT EXISTS "User" (
+      "id" integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+      "email" text NOT NULL,
+      "passwordHash" text NOT NULL,
+      "passwordSalt" text NOT NULL,
+      UNIQUE("email")
+    );`,
+    // Create Profile table
+    `CREATE TABLE IF NOT EXISTS "Profile" (
+      "id" integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+      "userId" integer NOT NULL,
+      "username" text NOT NULL,
+      "bio" text,
+      "avatar" text,
+      FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE
+    );`,
+    // Create Listing table
     `CREATE TABLE IF NOT EXISTS "Listing" (
       "id" integer PRIMARY KEY AUTOINCREMENT NOT NULL,
       "title" text NOT NULL,
       "category" text NOT NULL,
       "condition" text NOT NULL,
       "description" text NOT NULL,
-      "images" text DEFAULT '[]' NOT NULL,
+      "images" text DEFAULT '["/window.svg"]' NOT NULL,
       "pickupAddress" text NOT NULL,
       "pickupInstructions" text,
-      "availabilityDays" text DEFAULT '[]' NOT NULL,
-      "availabilityTimeStart" text NOT NULL,
-      "availabilityTimeEnd" text NOT NULL
+      "createdBy" integer NOT NULL,
+      FOREIGN KEY ("createdBy") REFERENCES "Profile"("id") ON DELETE CASCADE
     );`,
+    // Clear existing data
     'DELETE FROM "Listing";',
+    'DELETE FROM "Profile";',
+    'DELETE FROM "User";',
+    // Insert test user
+    `INSERT INTO "User" ("email", "passwordHash", "passwordSalt")
+     VALUES (${sqlValue(testEmail)}, ${sqlValue(testPasswordHash)}, ${sqlValue(testSalt)});`,
+    // Insert test profile (userId will be 1)
+    `INSERT INTO "Profile" ("userId", "username", "bio", "avatar")
+     VALUES (1, ${sqlValue(testUsername)}, ${sqlValue("Test user account for seeded listings")}, NULL);`,
   ];
 
   for (let index = 0; index < 100; index++) {
@@ -210,11 +227,10 @@ const buildSqlScript = () => {
     const title = generateTitle(itemName);
     const condition = pickOne(CONDITIONS);
     const description = generateDescription(title);
-    const availabilityDays = pickSome(WEEKDAYS, randomInt(1, 4));
-    const { start, end } = randomTimeRange();
     const pickupAddress = generateAddress();
     const pickupInstructions = Math.random() < 0.6 ? pickOne(INSTRUCTIONS) : null;
-    const images = Math.random() < 0.15 ? [] : [pickOne(PLACEHOLDER_IMAGES)];
+    // Always include at least one image, defaulting to /window.svg
+    const images = Math.random() < 0.85 ? [pickOne(PLACEHOLDER_IMAGES)] : ["/window.svg"];
 
     const insertValues = [
       sqlValue(title),
@@ -224,9 +240,7 @@ const buildSqlScript = () => {
       serializeJson(images),
       sqlValue(pickupAddress),
       sqlValue(pickupInstructions),
-      serializeJson(availabilityDays),
-      sqlValue(start),
-      sqlValue(end),
+      "1", // createdBy references the test profile (id=1)
     ].join(", ");
 
     statements.push(
@@ -238,9 +252,7 @@ const buildSqlScript = () => {
         "images",
         "pickupAddress",
         "pickupInstructions",
-        "availabilityDays",
-        "availabilityTimeStart",
-        "availabilityTimeEnd"
+        "createdBy"
       ) VALUES (${insertValues});`
     );
   }

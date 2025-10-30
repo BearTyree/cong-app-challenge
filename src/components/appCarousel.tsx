@@ -6,7 +6,6 @@ import {
   CarouselItem,
 } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay";
-import { Button } from "@/components/ui/button";
 
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 
@@ -19,9 +18,9 @@ export function AppCarousel() {
     {
       id: 1,
       src: "/banner_school.jpg",
-      text: "Back to School Essentials",
-      sub: "Find all the class room necessities",
-      href: "/",
+      text: "Need Clothing for the Winter?",
+      sub: "Find all the winter essentials here!",
+      href: "https://trovable.org/?category=clothing",
       right: false,
       color: "#F34F4F",
     },
@@ -29,8 +28,8 @@ export function AppCarousel() {
       id: 2,
       src: "/banner_tech.jpg",
       text: "Used Laptops, Tablets, and Phones",
-      sub: "Get recycled tech here",
-      href: "/",
+      sub: "Get recycled tech here!",
+      href: "https://trovable.org/?category=electronics",
       right: true,
       color: "#4F83F4",
     },
@@ -90,9 +89,6 @@ export function AppCarousel() {
                         {b.text}
                       </h1>
                       <h1 className="font-bold text-white">{b.sub}</h1>
-                      <Button className="bg-[#212121] cursor-pointer hover:bg-[#303030]">
-                        Search Now
-                      </Button>
                     </div>
                   </AspectRatio>
                 </CardContent>

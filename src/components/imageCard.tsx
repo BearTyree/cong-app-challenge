@@ -11,7 +11,6 @@ interface ImageCardProps {
 }
 
 const isRemoteImage = (src: string) => /^https?:\/\//.test(src);
-const fallbackImage = "/rackets.png";
 
 export default function ImageCard({
   id,
@@ -20,7 +19,7 @@ export default function ImageCard({
   condition,
   categoryLabel
 }: ImageCardProps) {
-  const resolvedSrc = imageSrc ?? fallbackImage;
+  const resolvedSrc = imageSrc ?? "/window.svg";
   return (
     <Link
       href={`/listing/${id}`}

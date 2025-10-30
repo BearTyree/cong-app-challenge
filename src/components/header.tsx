@@ -12,6 +12,8 @@ import {
 } from "@/components/ui/navigation-menu";
 import Image from "next/image";
 import { SearchBar } from "@/components/searchBar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { getCurrentUserProfile } from "@/lib/auth-helpers";
 
 const peopleComponents: {
   title: string;
@@ -120,6 +122,7 @@ const homeComponents: { title: string; href: string; description?: string }[] =
 
 export default async function Header() {
   const isAuthenticated = await authenticated();
+  const userProfile = isAuthenticated ? await getCurrentUserProfile(isAuthenticated) : null;
 
   return (
     <div className="flex flex-col min-w-screen fixed top-0 z-50">
@@ -147,11 +150,29 @@ export default async function Header() {
               </NavigationMenuLink>
             </NavigationMenuItem>
           )}
+        {userProfile && (
+          <div className="pl-4 pr-4">
+            <Link
+              href={`/profile/${userProfile.id}`}
+              className="hover:opacity-80 transition-opacity"
+            >
+              <Avatar className="h-11 w-11 cursor-pointer border-2">
+                {userProfile.avatar && (
+                  <AvatarImage src={userProfile.avatar} alt={userProfile.username} />
+                )}
+                <AvatarFallback className="bg-[#9bc27d] text-white font-semibold">
+                  {userProfile.username.charAt(0).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+            </Link>
+          </div>
+        )}
+        <div className="pr-4">
           {isAuthenticated ? (
             <NavigationMenuItem>
               <form action={logout}>
                 <NavigationMenuLink asChild>
-                  <button type="submit" className="px-4 py-2">
+                  <button type="submit" className="px-4 py-2 border-2">
                     Logout
                   </button>
                 </NavigationMenuLink>
@@ -175,7 +196,9 @@ export default async function Header() {
               </NavigationMenuItem>
             </>
           )}
+          </div>
         </NavigationMenuList>
+        
       </NavigationMenu>
       {isAuthenticated && (
         <NavigationMenu
