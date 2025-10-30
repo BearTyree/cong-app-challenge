@@ -178,7 +178,7 @@ export default async function Header() {
               </form>
             </NavigationMenuItem>
           ) : (
-            <div className="flex">
+            <div className="flex gap-1">
               <NavigationMenuItem>
                 <NavigationMenuLink asChild>
                   <Link href="/login" className="px-4 py-2">
