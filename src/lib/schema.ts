@@ -27,15 +27,9 @@ export const listingTable = sqliteTable("Listing", {
   images: text("images", { mode: "json" })
     .$type<string[]>()
     .notNull()
-    .default([]),
+    .default(["/window.svg"]),
   pickupAddress: text("pickupAddress").notNull(),
   pickupInstructions: text("pickupInstructions"),
-  availabilityDays: text("availabilityDays", { mode: "json" })
-    .$type<string[]>()
-    .notNull()
-    .default([]),
-  availabilityTimeStart: text("availabilityTimeStart").notNull(),
-  availabilityTimeEnd: text("availabilityTimeEnd").notNull(),
   createdBy: integer("createdBy").references(() => profilesTable.id, {
     onDelete: "cascade",
   }),

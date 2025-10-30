@@ -1,4 +1,4 @@
-import { and, desc, eq, like, notInArray, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, like, notInArray, or, sql } from "drizzle-orm";
 
 import { getDbAsync } from "@/lib/drizzle";
 import { getPublicObjectUrl } from "@/lib/r2";
@@ -14,9 +14,6 @@ export interface ListingCardData {
   condition: string;
   conditionLabel: string;
   pickupAddress: string;
-  availabilityDays: string[];
-  availabilityTimeStart: string;
-  availabilityTimeEnd: string;
   primaryImage: string | null;
 }
 
@@ -42,31 +39,36 @@ export interface PaginatedListings {
 
 const DEFAULT_PAGE_SIZE = 12;
 
+/**
+ * URL validation helpers
+ */
 const isAbsoluteUrl = (value: string) => /^https?:\/\//i.test(value);
 const isDataUrl = (value: string) => value.startsWith("data:");
 const isLocalPath = (value: string) =>
   value.startsWith("/") || value.startsWith("./") || value.startsWith("../");
 
-//these three functions are really bad but I don't care enough to fix them
+/**
+ * Converts an image key to a public URL.
+ * Handles absolute URLs, data URLs, local paths, and R2 object keys.
+ */
 const toPublicImage = (key: string | null | undefined): string | null => {
   if (!key) {
     return null;
   }
 
+  // Handle absolute URLs, data URLs, and local paths
   if (isAbsoluteUrl(key) || isDataUrl(key) || isLocalPath(key)) {
     return key.startsWith("./") || key.startsWith("../")
       ? key.replace(/^\.{1,2}\//, "/")
       : key;
   }
 
+  // Handle public/ prefix
   if (key.startsWith("public/")) {
     return `/${key.slice("public/".length)}`;
   }
 
-  if (key.startsWith("seed://")) {
-    return `/${key.slice("seed://".length)}`.replace(/\/{2,}/g, "/");
-  }
-
+  // Assume it's an R2 object key
   return getPublicObjectUrl(key);
 };
 
@@ -91,44 +93,10 @@ const normalizeImages = (images: ListingRow["images"]): string[] => {
   return [];
 };
 
-const normalizeAvailabilityDays = (
-  days: ListingRow["availabilityDays"]
-): string[] => {
-  if (!days) {
-    return [];
-  }
-
-  if (Array.isArray(days)) {
-    return days;
-  }
-
-  try {
-    const parsed = JSON.parse(String(days));
-    if (Array.isArray(parsed)) {
-      return parsed;
-    }
-  } catch {
-    // ignore parse errors and fall back to empty array
-  }
-
-  return [];
-};
-//for seeding images, if no images are provided, use these fallback images
-const FALLBACK_IMAGES = [
-  "/banner_school.jpg",
-  "/banner_tech.jpg",
-  "/rackets.png",
-  "/window.svg",
-  "/globe.svg",
-  "/logo.svg",
-  "/file.svg",
-];
-
-const getFallbackImage = (id: number): string => {
-  const index = Math.abs(id) % FALLBACK_IMAGES.length;
-  return FALLBACK_IMAGES[index];
-};
-//again this should validated frontend but I  can't be bothered to go through it right now.
+/**
+ * Resolves images for a listing row.
+ * Returns the default window.svg image if no images are present.
+ */
 const resolveImages = (row: ListingRow) => {
   const images = normalizeImages(row.images);
 
@@ -139,10 +107,10 @@ const resolveImages = (row: ListingRow) => {
     };
   }
 
-  const fallback = getFallbackImage(row.id);
+  // Default to window.svg if no images
   return {
-    images: [fallback],
-    primaryImage: fallback,
+    images: ["/window.svg"],
+    primaryImage: "/window.svg",
   };
 };
 
@@ -157,9 +125,6 @@ const mapRowToCard = (row: ListingRow): ListingCardData => {
     condition: row.condition,
     conditionLabel: getConditionLabel(row.condition),
     pickupAddress: row.pickupAddress,
-    availabilityDays: normalizeAvailabilityDays(row.availabilityDays),
-    availabilityTimeStart: row.availabilityTimeStart,
-    availabilityTimeEnd: row.availabilityTimeEnd,
     primaryImage: primaryImage ?? null,
   };
 };
@@ -210,18 +175,29 @@ const buildFilters = (filters?: ListingFilters) => {
   return and(...conditions);
 };
 
+export type SortBy = "id" | "title";
+export type SortOrder = "asc" | "desc";
+
 export async function getListingsPage(
   options: {
     page?: number;
     pageSize?: number;
+    sortBy?: SortBy;
+    sortOrder?: SortOrder;
   } & ListingFilters = {}
 ): Promise<PaginatedListings> {
   const page = Math.max(options.page ?? 1, 1);
   const pageSize = Math.max(options.pageSize ?? DEFAULT_PAGE_SIZE, 1);
+  const sortBy = options.sortBy ?? "id";
+  const sortOrder = options.sortOrder ?? "desc";
   const offset = (page - 1) * pageSize;
   const whereClause = buildFilters(options);
 
   const db = await getDbAsync();
+
+  // Build order by clause dynamically
+  const sortColumn = sortBy === "id" ? listingTable.id : listingTable.title;
+  const orderByClause = sortOrder === "asc" ? asc(sortColumn) : desc(sortColumn);
 
   const totalQuery = db
     .select({ value: sql<number>`count(${listingTable.id})` })
@@ -230,7 +206,7 @@ export async function getListingsPage(
   const listingsQuery = db
     .select()
     .from(listingTable)
-    .orderBy(desc(listingTable.id))
+    .orderBy(orderByClause)
     .limit(pageSize)
     .offset(offset);
 

@@ -2,8 +2,36 @@ import { AppCarousel } from "@/components/appCarousel";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import ImageGrid from "@/components/imageGrid";
+import FilterBar from "@/components/listings/FilterBar";
+import Pagination from "@/components/listings/Pagination";
+import { getListingsPage, SortBy, SortOrder } from "@/lib/listings";
 
-export default function Landing() {
+interface LandingProps {
+  searchParams?: {
+    page?: string;
+    category?: string;
+    sortBy?: string;
+    sortOrder?: string;
+  };
+}
+
+export default async function Landing({ searchParams }: LandingProps) {
+  const currentPage = Number(searchParams?.page) || 1;
+  const category = searchParams?.category;
+  const sortBy = (searchParams?.sortBy as SortBy) || "id";
+  const sortOrder = (searchParams?.sortOrder as SortOrder) || "desc";
+
+  // Fetch data to get total count for pagination
+  const { total, pageSize } = await getListingsPage({
+    page: currentPage,
+    pageSize: 18,
+    category,
+    sortBy,
+    sortOrder,
+  });
+
+  const totalPages = Math.ceil(total / pageSize);
+
   return (
     <div className="w-full h-full flex flex-col justify-center items-center mt-5">
       <AppCarousel />
@@ -18,8 +46,26 @@ export default function Landing() {
           </Button>
         </Link>
       </div>
-      <p className="w-full font-bold">From Top Givers</p>
-      <ImageGrid></ImageGrid>
+
+      <div className="w-full">
+        <p className="w-full font-bold mb-4">Browse Available Items</p>
+
+        <FilterBar />
+
+        <ImageGrid
+          currentPage={currentPage}
+          category={category}
+          sortBy={sortBy}
+          sortOrder={sortOrder}
+        />
+
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          totalItems={total}
+          pageSize={pageSize}
+        />
+      </div>
     </div>
   );
 }

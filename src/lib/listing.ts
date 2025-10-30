@@ -22,16 +22,6 @@ export const CONDITIONS = [
   { value: "well-worn", label: "Well Worn", description: "Significant use but functional" }
 ] as const
 
-export const WEEKDAYS = [
-  { value: "monday", label: "Monday" },
-  { value: "tuesday", label: "Tuesday" },
-  { value: "wednesday", label: "Wednesday" },
-  { value: "thursday", label: "Thursday" },
-  { value: "friday", label: "Friday" },
-  { value: "saturday", label: "Saturday" },
-  { value: "sunday", label: "Sunday" }
-] as const
-
 export const FORM_LIMITS = {
   maxImages: 5,
   maxFileSize: 5 * 1024 * 1024, // 5MB
@@ -41,10 +31,8 @@ export const FORM_LIMITS = {
 // Types
 export type Category = typeof CATEGORIES[number]["id"]
 export type Condition = typeof CONDITIONS[number]["value"]
-export type WeekDay = typeof WEEKDAYS[number]["value"]
 
 // Validation schemas
-const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/
 
 export const listingSchema = z.object({
   title: z.string()
@@ -80,29 +68,8 @@ export const listingSchema = z.object({
 
   pickupInstructions: z.string()
     .max(500, "Instructions must be less than 500 characters")
-    .optional(),
-  availabilityDays: z.array(
-    z.enum(WEEKDAYS.map(d => d.value) as [WeekDay, ...WeekDay[]])
-  ).min(1, "Please select at least one day"),
-
-  availabilityTimeStart: z.string()
-    .regex(timeRegex, "Please enter a valid time (HH:MM)"),
-
-  availabilityTimeEnd: z.string()
-    .regex(timeRegex, "Please enter a valid time (HH:MM)")
-}).refine(
-  data => {
-    const start = data.availabilityTimeStart.split(":").map(Number)
-    const end = data.availabilityTimeEnd.split(":").map(Number)
-    const startMinutes = start[0] * 60 + start[1]
-    const endMinutes = end[0] * 60 + end[1]
-    return endMinutes > startMinutes
-  },
-  {
-    message: "End time must be after start time",
-    path: ["availabilityTimeEnd"]
-  }
-)
+    .optional()
+})
 
 export type ListingFormData = z.infer<typeof listingSchema>
 
@@ -124,14 +91,7 @@ export const generatePreviewUrl = (file: File): string => {
   return URL.createObjectURL(file)
 }
 
-export const formatAvailability = (days: WeekDay[], startTime: string, endTime: string): string => {
-  const dayLabels = days.map(day =>
-    WEEKDAYS.find(d => d.value === day)?.label || day
-  ).join(", ")
-  return `${dayLabels} from ${startTime} to ${endTime}`
-}
-
-//Should not be neeeded to be done via index but via text.
+// Helper functions to get labels from IDs
 export const getCategoryLabel = (categoryId: string): string => {
   return CATEGORIES.find((category) => category.id === categoryId)?.label ?? categoryId
 }

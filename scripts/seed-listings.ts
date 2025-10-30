@@ -52,16 +52,6 @@ const CATEGORY_POOL: CategorySeed[] = [
 
 const CONDITIONS = ["new", "like-new", "gently-used", "used", "well-worn"] as const;
 
-const WEEKDAYS = [
-  "monday",
-  "tuesday",
-  "wednesday",
-  "thursday",
-  "friday",
-  "saturday",
-  "sunday",
-] as const;
-
 const PLACEHOLDER_IMAGES = [
   "/banner_school.jpg",
   "/banner_tech.jpg",
@@ -150,19 +140,6 @@ const pickSome = <T,>(items: readonly T[], count: number): T[] => {
   return selection;
 };
 
-const randomTimeRange = () => {
-  const startHour = randomInt(9, 17);
-  const startMinute = pickOne(["00", "30"]);
-  const spanHours = randomInt(1, 4);
-  const endHour = Math.min(startHour + spanHours, 21);
-  const endMinute = startMinute === "00" ? pickOne(["00", "30"]) : "30";
-
-  return {
-    start: `${String(startHour).padStart(2, "0")}:${startMinute}`,
-    end: `${String(endHour).padStart(2, "0")}:${endMinute}`,
-  };
-};
-
 const generateTitle = (itemName: string) => `${pickOne(ADJECTIVES)} ${itemName}`;
 
 const generateDescription = (title: string) => {
@@ -194,12 +171,10 @@ const buildSqlScript = () => {
       "category" text NOT NULL,
       "condition" text NOT NULL,
       "description" text NOT NULL,
-      "images" text DEFAULT '[]' NOT NULL,
+      "images" text DEFAULT '["/window.svg"]' NOT NULL,
       "pickupAddress" text NOT NULL,
       "pickupInstructions" text,
-      "availabilityDays" text DEFAULT '[]' NOT NULL,
-      "availabilityTimeStart" text NOT NULL,
-      "availabilityTimeEnd" text NOT NULL
+      "createdBy" integer
     );`,
     'DELETE FROM "Listing";',
   ];
@@ -210,11 +185,10 @@ const buildSqlScript = () => {
     const title = generateTitle(itemName);
     const condition = pickOne(CONDITIONS);
     const description = generateDescription(title);
-    const availabilityDays = pickSome(WEEKDAYS, randomInt(1, 4));
-    const { start, end } = randomTimeRange();
     const pickupAddress = generateAddress();
     const pickupInstructions = Math.random() < 0.6 ? pickOne(INSTRUCTIONS) : null;
-    const images = Math.random() < 0.15 ? [] : [pickOne(PLACEHOLDER_IMAGES)];
+    // Always include at least one image, defaulting to /window.svg
+    const images = Math.random() < 0.85 ? [pickOne(PLACEHOLDER_IMAGES)] : ["/window.svg"];
 
     const insertValues = [
       sqlValue(title),
@@ -224,9 +198,6 @@ const buildSqlScript = () => {
       serializeJson(images),
       sqlValue(pickupAddress),
       sqlValue(pickupInstructions),
-      serializeJson(availabilityDays),
-      sqlValue(start),
-      sqlValue(end),
     ].join(", ");
 
     statements.push(
@@ -237,10 +208,7 @@ const buildSqlScript = () => {
         "description",
         "images",
         "pickupAddress",
-        "pickupInstructions",
-        "availabilityDays",
-        "availabilityTimeStart",
-        "availabilityTimeEnd"
+        "pickupInstructions"
       ) VALUES (${insertValues});`
     );
   }

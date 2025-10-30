@@ -1,5 +1,5 @@
 import ImageCard from "@/components/imageCard";
-import { getListingsPage } from "@/lib/listings";
+import { getListingsPage, SortBy, SortOrder } from "@/lib/listings";
 
 interface ImageGridProps {
   query?: string;
@@ -7,6 +7,8 @@ interface ImageGridProps {
   category?: string;
   tag?: string;
   pageSize?: number;
+  sortBy?: SortBy;
+  sortOrder?: SortOrder;
 }
 
 const DEFAULT_PAGE_SIZE = 18;
@@ -17,6 +19,8 @@ export default async function ImageGrid({
   category,
   tag,
   pageSize = DEFAULT_PAGE_SIZE,
+  sortBy = "id",
+  sortOrder = "desc",
 }: ImageGridProps) {
   const { listings } = await getListingsPage({
     page: currentPage,
@@ -24,6 +28,8 @@ export default async function ImageGrid({
     search: query,
     category,
     tags: tag ? [tag] : undefined,
+    sortBy,
+    sortOrder,
   });
 
   if (listings.length === 0) {

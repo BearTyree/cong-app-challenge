@@ -7,7 +7,6 @@ import ItemCard from "@/components/ItemCard"
 import ItemDetails from "@/components/ItemDetails"
 import ItemGrid from "@/components/ItemGrid"
 import PickupInfo from "@/components/PickupInfo"
-import { formatAvailability, WeekDay } from "@/lib/listing"
 import { getListingById, getListingsPage } from "@/lib/listings"
 
 interface ListingPageProps {
@@ -31,12 +30,6 @@ export default async function ListingPage({ params }: ListingPageProps) {
   if (!listing) {
     notFound()
   }
-
-  const availabilitySummary = formatAvailability(
-    listing.availabilityDays as WeekDay[],
-    listing.availabilityTimeStart,
-    listing.availabilityTimeEnd
-  )
 
   const relatedListings = await getListingsPage({
     pageSize: 4,
@@ -63,7 +56,6 @@ export default async function ListingPage({ params }: ListingPageProps) {
             />
             <PickupInfo
               address={listing.pickupAddress}
-              availabilitySummary={availabilitySummary}
               instructions={listing.pickupInstructions}
             />
           </div>
