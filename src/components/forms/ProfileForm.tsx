@@ -16,7 +16,7 @@ const profileSchema = z.object({
     .max(50, "Username must be less than 50 characters"),
   bio: z
     .string()
-    .max(500, "Bio must be less than 500 characters")
+    .max(300, "Bio must be less than 300 characters")
     .optional()
     .or(z.literal("")),
   avatar: z.custom<File>().optional(),
