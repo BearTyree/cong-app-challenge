@@ -12,6 +12,8 @@ import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { Card, CardContent } from "@/components/ui/card";
 import { useRef } from "react";
 import Image from "next/image";
+import Link from "next/link";
+import { Button } from "./ui/button";
 
 export function AppCarousel() {
   const banners = [
@@ -20,7 +22,7 @@ export function AppCarousel() {
       src: "/banner_school.jpg",
       text: "Need Clothing for the Winter?",
       sub: "Find all the winter essentials here!",
-      href: "https://trovable.org/?category=clothing",
+      href: "/search?category=clothing",
       right: false,
       color: "#F34F4F",
     },
@@ -29,7 +31,7 @@ export function AppCarousel() {
       src: "/banner_tech.jpg",
       text: "Used Laptops, Tablets, and Phones",
       sub: "Get recycled tech here!",
-      href: "https://trovable.org/?category=electronics",
+      href: "/search?category=electronics",
       right: true,
       color: "#4F83F4",
     },
@@ -89,6 +91,7 @@ export function AppCarousel() {
                         {b.text}
                       </h1>
                       <h1 className="font-bold text-white">{b.sub}</h1>
+                      <Link className="cursor-pointer" href={b.href}><Button className="cursor-pointer">Shop Now</Button></Link>
                     </div>
                   </AspectRatio>
                 </CardContent>
