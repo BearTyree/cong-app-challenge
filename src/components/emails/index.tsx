@@ -36,7 +36,7 @@ export default function ItemRequestEmail({
         <Container style={container}>
           <Section style={logoSection}>
             <Img
-              src="/logo.svg"
+              src="https://trovable.org/logo.svg"
               alt="Trovable"
               width="120"
               height="40"
