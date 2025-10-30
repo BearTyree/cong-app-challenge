@@ -7,7 +7,7 @@ import { canEditProfile } from "@/lib/auth-helpers";
 
 const updateProfileSchema = z.object({
   username: z.string().min(3).max(50).optional(),
-  bio: z.string().max(500).optional().nullable(),
+  bio: z.string().max(300).optional().nullable(),
   avatar: z.string().min(5).optional().nullable(),
 });
 

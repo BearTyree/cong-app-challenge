@@ -33,9 +33,9 @@ export default function ItemCard({
           unoptimized={isRemote(resolvedSrc)}
         />
       </div>
-      <p className="font-medium text-sm">{title}</p>
-      <p className="text-xs text-gray-600">{condition}</p>
-      <p className="text-xs uppercase tracking-wide text-gray-500">{categoryLabel}</p>
+      <p className="font-medium text-sm break-words overflow-wrap-anywhere">{title}</p>
+      <p className="text-xs text-gray-600 break-words overflow-wrap-anywhere">{condition}</p>
+      <p className="text-xs uppercase tracking-wide text-gray-500 break-words overflow-wrap-anywhere">{categoryLabel}</p>
     </Link>
   )
 }

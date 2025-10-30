@@ -55,18 +55,18 @@ export default async function ListingPage({ params }: ListingPageProps) {
           {/* Details Section */}
           <div className="space-y-6">
             {/* Title */}
-            <h1 className="text-3xl font-bold text-gray-900">{listing.title}</h1>
+            <h1 className="text-3xl font-bold text-gray-900 break-words overflow-wrap-anywhere">{listing.title}</h1>
 
             {/* Profile */}
             <Link
               href={`/profile/${listing.createdByProfileId}`}
               className="inline-flex items-center gap-3 hover:bg-gray-50 p-3 -ml-3 rounded-lg transition-colors group"
             >
-              <div className="h-12 w-12 rounded-full bg-[#9bc27d] flex items-center justify-center text-white font-semibold text-lg group-hover:bg-[#78A75A] transition-colors">
+              <div className="h-12 w-12 rounded-full bg-[#9bc27d] flex items-center justify-center text-white font-semibold text-lg group-hover:bg-[#78A75A] transition-colors flex-shrink-0">
                 {listing.createdByUsername.charAt(0).toUpperCase()}
               </div>
-              <div>
-                <p className="font-semibold text-gray-900 group-hover:text-[#78A75A] transition-colors">
+              <div className="min-w-0">
+                <p className="font-semibold text-gray-900 group-hover:text-[#78A75A] transition-colors break-words overflow-wrap-anywhere">
                   {listing.createdByUsername}
                 </p>
                 <p className="text-sm text-gray-500">View profile →</p>
@@ -74,17 +74,17 @@ export default async function ListingPage({ params }: ListingPageProps) {
             </Link>
 
             {/* Request Item Button */}
-            <RequestButton />
+            <RequestButton listingId={listing.id} />
 
             {/* Category + Condition */}
             <dl className="grid grid-cols-2 gap-4">
-              <div>
+              <div className="min-w-0">
                 <dt className="text-sm text-gray-600">Category</dt>
-                <dd className="font-semibold">{listing.categoryLabel}</dd>
+                <dd className="font-semibold break-words overflow-wrap-anywhere">{listing.categoryLabel}</dd>
               </div>
-              <div>
+              <div className="min-w-0">
                 <dt className="text-sm text-gray-600">Condition</dt>
-                <dd className="font-semibold capitalize">{listing.conditionLabel}</dd>
+                <dd className="font-semibold capitalize break-words overflow-wrap-anywhere">{listing.conditionLabel}</dd>
               </div>
             </dl>
 
