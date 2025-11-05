@@ -13,13 +13,18 @@ export async function POST(request: Request, res: Response) {
     requesterEmail,
     listerEmail,
     profileId,
-  } = await request.json();
+  } = await request.json() as {
+    itemName: string;
+    requesterEmail: string;
+    listerEmail: string;
+    profileId: number;
+  }
 
   const { data, error } = await resend.emails.send({
-    from: "onboarding@resend.dev",
+    from: "donotreply@trovable.org",
     to: [listerEmail],
     subject: "Trovable | Someone is interested in picking up your item!",
-    html: await render(TrovableTemplate({ itemName, requesterEmail, listerEmail, profileId, })),
+    html: await render(TrovableTemplate({ itemName, requesterEmail, listerEmail, profileId })),
   });
 
   if (error) {
